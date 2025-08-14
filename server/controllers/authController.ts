@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { validationResult } from 'express-validator';
 import User from '../models/User'; // Assuming User model is defined in models/User.ts
+import Profile from '../models/Profile';
 import process from 'process';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/emailService';
 ; 
@@ -37,7 +38,6 @@ export const register = async (req: Request, res: Response) => {
 
   // Login user
   export const login = async (req:Request, res:Response)=> {
-    console.log("ksjdfk")
     try {
       // Check for validation errors
       const errors = validationResult(req);
@@ -83,16 +83,33 @@ export const register = async (req: Request, res: Response) => {
         { expiresIn: '7d' }
       );
 
-      // Remove sensitive data from response
+      // Ensure profile exists and build response
+      let profile = await Profile.findOne({ userId: user._id });
+      if (!profile) {
+        profile = new Profile({ userId: user._id });
+        await profile.save();
+      }
+
       const userResponse = {
         id: user._id,
         name: user.name,
         email: user.email,
         phone: user.phone,
         isEmailVerified: user.isEmailVerified,
-        profileCompletion: user.profile?.profileCompletion || 0,
-        settings: user.settings,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        profile: {
+          avatar: profile.avatar || undefined,
+          headline: profile.headline || undefined,
+          location: profile.location || undefined,
+          bio: profile.bio || undefined,
+          url: profile.url || undefined,
+          skills: profile.skills || [],
+          education: profile.education || [],
+          experience: profile.experience || [],
+          resume: profile.resume || undefined,
+          profileCompletion: profile.profileCompletion || 0,
+        },
       };
 
       res.json({
@@ -149,7 +166,7 @@ export const register = async (req: Request, res: Response) => {
 
       // Send password reset email (implement this utility)
       try {
-        await sendPasswordResetEmail(user.email, user.name, resetToken);
+        await sendPasswordResetEmail(user.email, resetToken, user.name);
       } catch (emailError) {
         console.error('Password reset email sending failed:', emailError);
         return res.status(500).json({
@@ -265,7 +282,7 @@ export const register = async (req: Request, res: Response) => {
 
       // Send verification email (implement this utility)
       try {
-        await sendVerificationEmail(user.email, user.name, emailVerificationToken);
+        await sendVerificationEmail(user.email, emailVerificationToken, user.name);
       } catch (emailError) {
         console.error('Verification email sending failed:', emailError);
         return res.status(500).json({
@@ -312,7 +329,8 @@ export const register = async (req: Request, res: Response) => {
       name: decoded.name.trim(),
       email: decoded.email.toLowerCase().trim(),
       phone: decoded.phone?.trim(),
-      password: decoded.password // hash inside User model pre-save hook
+      password: decoded.password, // hash inside User model pre-save hook
+      isEmailVerified: true,
     });
 
     await user.save();
