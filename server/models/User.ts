@@ -1,13 +1,12 @@
-import mongoose, { Document, Model, ObjectId } from 'mongoose';
+import mongoose, { Document, Model, ObjectId, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 // Instance methods
 interface IUserMethods {
   comparePassword(candidatePassword: string): Promise<boolean>;
-  calculateProfileCompletion(): number;
 }
 
-// User fields
+// User fields (no embedded profile now, just profile reference)
 interface IUser {
   name: string;
   email: string;
@@ -18,20 +17,10 @@ interface IUser {
   emailVerificationExpires?: Date;
   passwordResetToken?: string;
   passwordResetExpires?: Date;
-  profile: {
-    avatar?: string | null;
-    headline?: string;
-    location?: string;
-    bio?: string;
-    skills?: string[];
-    education?: any[];
-    experience?: any[];
-    resume?: any;
-    profileCompletion?: number;
-  };
+  profile?: ObjectId; // Reference to Profile document
+
   settings?: any;
 
-  // ✅ Added timestamps here so TS knows they exist
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,23 +40,13 @@ const userSchema = new mongoose.Schema<IUser, UserModel, IUserMethods>(
     emailVerificationExpires: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,
-    profile: {
-      avatar: { type: String, default: null },
-      headline: String,
-      location: String,
-      bio: String,
-      skills: [String],
-      education: [{}],
-      experience: [{}],
-      resume: {},
-      profileCompletion: { type: Number, default: 0 }
-    },
+    profile: { type: Schema.Types.ObjectId, ref: 'Profile' }, // Reference to Profile model
     settings: {}
   },
-  { timestamps: true } // ✅ This tells Mongoose to create createdAt & updatedAt
+  { timestamps: true }
 );
 
-// Hash password
+// Hash password before saving
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(12);
@@ -75,33 +54,11 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-// Calculate profile completion
-userSchema.methods.calculateProfileCompletion = function () {
-  let completion = 0;
-  const totalFields = 8;
-  if (this.profile?.headline) completion++;
-  if (this.profile?.location) completion++;
-  if (this.profile?.bio) completion++;
-  if (this.profile?.skills?.length) completion++;
-  if (this.profile?.education?.length) completion++;
-  if (this.profile?.experience?.length) completion++;
-  if (this.profile?.avatar) completion++;
-  if (this.profile?.resume) completion++;
-  return Math.round((completion / totalFields) * 100);
-};
-
-// Update profileCompletion before saving
-userSchema.pre('save', function (next) {
-  if (this.isModified('profile')) {
-    this.profile.profileCompletion = this.calculateProfileCompletion();
-  }
-  next();
-});
-
-// Compare password
+// Compare password method
 userSchema.methods.comparePassword = async function (candidatePassword: string) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
 const User = mongoose.model<IUser, UserModel>('User', userSchema);
+
 export default User;

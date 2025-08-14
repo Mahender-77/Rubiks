@@ -51,7 +51,7 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-const API_URL = 'http://192.168.1.105/api/auth';
+const API_URL = 'http://192.168.1.105:5000/api/auth';
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -78,16 +78,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const storeAuth = async (newToken: string, newUser: User) => {
-    try {
-      await AsyncStorage.setItem('authToken', newToken);
-      await AsyncStorage.setItem('authUser', JSON.stringify(newUser));
-      setToken(newToken);
-      setUser(newUser);
-    } catch (error) {
-      console.error('Error storing auth:', error);
-    }
-  };
+ const storeAuth = async (newToken: string, newUser: User) => {
+  if (!newToken || !newUser) {
+    console.error("storeAuth called with invalid data:", { newToken, newUser });
+    return;
+  }
+  try {
+    await AsyncStorage.setItem('authToken', newToken);
+    await AsyncStorage.setItem('authUser', JSON.stringify(newUser));
+    setToken(newToken);
+    setUser(newUser);
+  } catch (error) {
+    console.error('Error storing auth:', error);
+  }
+};
 
   const clearAuth = async () => {
     try {
@@ -100,29 +104,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const login = async (email: string, password: string) => {
-    try {
-      const response = await fetch(`${API_URL}/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+const login = async (email: string, password: string) => {
+  try {
+    const response = await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (data.success) {
-        await storeAuth(data.token, data.user);
-        return { success: true, message: data.message };
-      } else {
-        return { success: false, message: data.message };
+    if (data.success) {
+      // backend sends user and token inside data.data
+      const token = data.data?.token;
+      const user = data.data?.user;
+
+      if (!token || !user) {
+        return { success: false, message: 'Invalid server response: missing token or user' };
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      return { success: false, message: 'Server not available. Please start the backend server.' };
+
+      await storeAuth(token, user);
+      return { success: true, message: data.message };
+    } else {
+      return { success: false, message: data.message };
     }
-  };
+  } catch (error) {
+    console.error('Login error:', error);
+    return { success: false, message: 'Server not available. Please start the backend server.' };
+  }
+};
+
 
   const register = async (name: string, email: string, password: string) => {
     try {

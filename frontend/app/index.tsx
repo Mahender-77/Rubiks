@@ -17,7 +17,7 @@ export default function WelcomeScreen() {
     const handleNavigation = async () => {
       if (!isLoading) {
         try {
-          if (!user) {
+          if (user) {
             // User is logged in, redirect to main app
             router.replace('/(tabs)');
           } else {

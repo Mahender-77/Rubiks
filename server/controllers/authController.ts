@@ -7,114 +7,37 @@ import process from 'process';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/emailService';
 ; 
   // Register new user
-  export const register = async (req: Request, res: Response)=> {
-    try {
-      // Check for validation errors
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          success: false,
-          message: 'Validation failed',
-          errors: errors.array()
-        });
-      }
 
-      const { name, email, password, phone } = req.body;
 
-      // Check if user already exists
-      const existingUser = await User.findOne({ email: email.toLowerCase() });
-      if (existingUser) {
-        return res.status(400).json({
-          success: false,
-          message: 'User with this email already exists'
-        });
-      }
+export const register = async (req: Request, res: Response) => {
+  const { name, email, password, phone } = req.body;
 
-      // Generate email verification token
-      const emailVerificationToken = crypto.randomBytes(32).toString('hex');
-      const emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
-
-      // Create new user
-      const user = new User({
-        name: name.trim(),
-        email: email.toLowerCase().trim(),
-        phone: phone?.trim(),
-        password,
-        emailVerificationToken,
-        emailVerificationExpires
-      });
-
-      await user.save();
-
-      // Create separate profile if using separate Profile model
-      // Uncomment if you're using the separate Profile model from document 1
-      /*
-      const profile = new Profile({
-        userId: user._id,
-        content: {
-          personalInfo: {
-            name: user.name,
-            email: user.email,
-            phone: user.phone
-          }
-        }
-      });
-      await profile.save();
-      */
-
-      // Send verification email (implement this utility)
-      try {
-        await sendVerificationEmail(user.email, user.name, emailVerificationToken);
-      } catch (emailError) {
-        console.error('Email sending failed:', emailError);
-        // Don't fail registration if email fails
-      }
-
-      // Generate JWT token
-      const jwtSecret = process.env.JWT_SECRET as string;
-      if (!jwtSecret) {
-        throw new Error('JWT_SECRET is not defined in environment variables');
-      }
-      const token = jwt.sign(
-        { 
-          userId: user._id,
-          email: user.email 
-        },
-        jwtSecret,
-        { expiresIn: '7d' }
-      );
-
-      // Remove sensitive data from response
-      const userResponse = {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        isEmailVerified: user.isEmailVerified,
-        profileCompletion: user.profile?.profileCompletion || 0,
-        createdAt: user.createdAt
-      };
-
-      res.status(201).json({
-        success: true,
-        message: 'User registered successfully. Please check your email to verify your account.',
-        data: {
-          user: userResponse,
-          token
-        }
-      });
-
-    } catch (error) {
-      console.error('Registration error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Internal server error during registration'
-      });
-    }
+  // Check if email already exists
+  const existingUser = await User.findOne({ email: email.toLowerCase() });
+  if (existingUser) {
+    return res.status(400).json({ success: false, message: 'Email already registered' });
   }
+
+  // Create a verification token with user data (not yet stored in DB)
+  const jwtSecret = process.env.JWT_SECRET!;
+  const verificationToken = jwt.sign(
+    { name, email, password, phone },
+    jwtSecret,
+    { expiresIn: '24h' }
+  );
+
+  // Send verification email
+  await sendVerificationEmail(email, verificationToken, name);
+
+  return res.status(200).json({
+    success: true,
+    message: 'Verification email sent. Please check your inbox.'
+  });
+};
 
   // Login user
   export const login = async (req:Request, res:Response)=> {
+    console.log("ksjdfk")
     try {
       // Check for validation errors
       const errors = validationResult(req);
@@ -366,46 +289,37 @@ import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/emailSer
   }
 
   // Verify email (you'll need to add this route)
-  export const verifyEmail = async (req:Request, res:Response)=> {
-    try {
-      const { token } = req.params;
+ export const verifyEmail = async (req: Request, res: Response) => {
+  const { token } = req.params;
 
-      if (!token) {
-        return res.status(400).json({
-          success: false,
-          message: 'Verification token is required'
-        });
-      }
+  try {
+    const jwtSecret = process.env.JWT_SECRET!;
+    const decoded = jwt.verify(token, jwtSecret) as {
+      name: string;
+      email: string;
+      password: string;
+      phone?: string;
+    };
 
-      // Find user with valid verification token
-      const user = await User.findOne({
-        emailVerificationToken: token,
-        emailVerificationExpires: { $gt: Date.now() }
-      });
-
-      if (!user) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid or expired verification token'
-        });
-      }
-
-      // Update user verification status
-      user.isEmailVerified = true;
-      user.emailVerificationToken = undefined;
-      user.emailVerificationExpires = undefined;
-      await user.save();
-
-      res.json({
-        success: true,
-        message: 'Email verified successfully'
-      });
-
-    } catch (error) {
-      console.error('Email verification error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Internal server error'
-      });
+    // Check again if user already exists
+    const existingUser = await User.findOne({ email: decoded.email });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'Email already verified' });
     }
+
+    // Create the user now
+    const user = new User({
+      name: decoded.name.trim(),
+      email: decoded.email.toLowerCase().trim(),
+      phone: decoded.phone?.trim(),
+      password: decoded.password // hash inside User model pre-save hook
+    });
+
+    await user.save();
+
+    return res.status(200).json({ success: true, message: 'Email verified and account created' });
+  } catch (error) {
+    return res.status(400).json({ success: false, message: 'Invalid or expired token' });
   }
+};
+
