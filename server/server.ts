@@ -3,16 +3,19 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import authRoutes from './routes/auth';
+import profileRoutes from './routes/profile';
 import {Response , Request ,NextFunction} from 'express';
 
-dotenv.config();
+// Load env from server/config.env
+dotenv.config({ path: './config.env' });
 
 const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Increase body size limits to handle base64 images
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
 // Connect to MongoDB
 if (!process.env.MONGODB_URI) {
@@ -28,7 +31,7 @@ mongoose.connect(process.env.MONGODB_URI)
 
 // Routes
 app.use('/api/auth', authRoutes);
-// app.use('/api/profile', profileRoutes);
+app.use('/api/profile', profileRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -56,7 +59,7 @@ app.use('*', (req: Request, res: Response) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 app.listen(PORT, () => {
   console.log(`🚀 Rubiks server running on port ${PORT}`);

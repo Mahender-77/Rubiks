@@ -7,7 +7,7 @@ interface IUserMethods {
 }
 
 // User fields (no embedded profile now, just profile reference)
-interface IUser {
+export interface IUser {
   name: string;
   email: string;
   phone?: string;

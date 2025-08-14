@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface User {
@@ -51,7 +53,29 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-const API_URL = 'http://192.168.1.105:5000/api/auth';
+// Single base URL for API (auto-detected for development)
+const resolveBaseUrl = () => {
+  // Allow override via Expo public env
+const envUrl = Constants.expoConfig?.extra?.API_URL as string | undefined;
+if (envUrl) return envUrl.replace(/\/$/, '');
+
+  const defaultPort = 5001;
+  // Try to infer host from Expo dev server
+  const hostUri = (Constants.expoConfig as any)?.hostUri as string | undefined;
+  let host = hostUri ? hostUri.split(':')[0] : undefined;
+  if (!host) {
+    const dbg = (Constants as any)?.manifest2?.extra?.expoGo?.debuggerHost || (Constants as any)?.manifest?.debuggerHost;
+    if (typeof dbg === 'string') host = dbg.split(':')[0];
+  }
+  if (!host) {
+    host = Platform.OS === 'ios' ? '127.0.0.1' : '10.0.2.2';
+  }
+  return `http://${host}:${defaultPort}/api`;
+};
+
+const BASE_URL = resolveBaseUrl();
+const AUTH_URL = `${BASE_URL}/auth`;
+const PROFILE_URL = `${BASE_URL}/profile`;
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -106,7 +130,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
 const login = async (email: string, password: string) => {
   try {
-    const response = await fetch(`${API_URL}/login`, {
+    const response = await fetch(`${AUTH_URL}/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -139,7 +163,7 @@ const login = async (email: string, password: string) => {
 
   const register = async (name: string, email: string, password: string) => {
     try {
-      const response = await fetch(`${API_URL}/register`, {
+      const response = await fetch(`${AUTH_URL}/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -150,7 +174,7 @@ const login = async (email: string, password: string) => {
       const data = await response.json();
 
       if (data.success) {
-        await storeAuth(data.token, data.user);
+        // Registration sends verification email; do not store auth here
         return { success: true, message: data.message };
       } else {
         return { success: false, message: data.message };
@@ -167,7 +191,7 @@ const login = async (email: string, password: string) => {
 
   const forgotPassword = async (email: string) => {
     try {
-      const response = await fetch(`${API_URL}/forgot-password`, {
+      const response = await fetch(`${AUTH_URL}/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -185,7 +209,7 @@ const login = async (email: string, password: string) => {
 
   const resendVerification = async (email: string) => {
     try {
-      const response = await fetch(`${API_URL}/resend-verification`, {
+      const response = await fetch(`${AUTH_URL}/resend-verification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -203,7 +227,7 @@ const login = async (email: string, password: string) => {
 
 const updateProfile = async (profileData: any) => {
   try {
-    const response = await fetch(`http://192.168.0.141:5000/api/profile/basic`, {
+    const response = await fetch(`${PROFILE_URL}/basic`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -213,8 +237,8 @@ const updateProfile = async (profileData: any) => {
     });
 
     const data = await response.json();
-    if (data.success) {
-      setUser(data.user);  // backend should send updated user
+    if (data.success && data.user) {
+      setUser(data.user);
       await AsyncStorage.setItem('authUser', JSON.stringify(data.user));
       return { success: true, message: data.message };
     } else {
@@ -228,7 +252,7 @@ const updateProfile = async (profileData: any) => {
 
 const updateAvatar = async (avatar: string) => {
   try {
-    const response = await fetch(`http://192.168.0.141:5000/api/profile/avatar`, {
+    const response = await fetch(`${PROFILE_URL}/avatar`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -238,7 +262,7 @@ const updateAvatar = async (avatar: string) => {
     });
 
     const data = await response.json();
-    if (data.success) {
+    if (data.success && data.user) {
       setUser(data.user);
       await AsyncStorage.setItem('authUser', JSON.stringify(data.user));
       return { success: true, message: data.message };
@@ -254,7 +278,7 @@ const updateAvatar = async (avatar: string) => {
 
   const updateContact = async (contactData: any) => {
     try {
-      const response = await fetch(`${API_URL.replace('/auth', '/profile')}/contact`, {
+      const response = await fetch(`${PROFILE_URL}/contact`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -264,23 +288,9 @@ const updateAvatar = async (avatar: string) => {
       });
 
       const data = await response.json();
-      if (data.success) {
-                 // Update user with new profile info
-         if (user) {
-           const updatedUser = {
-             ...user,
-             name: contactData.name || user.name,
-             phone: contactData.phone || user.phone,
-             profile: {
-               ...user.profile,
-               headline: contactData.headline || user.profile.headline,
-               location: contactData.location || user.profile.location,
-               url: contactData.url || user.profile.url,
-             }
-           };
-           setUser(updatedUser);
-           await AsyncStorage.setItem('authUser', JSON.stringify(updatedUser));
-         }
+      if (data.success && data.user) {
+        setUser(data.user);
+        await AsyncStorage.setItem('authUser', JSON.stringify(data.user));
         return { success: true, message: data.message };
       } else {
         return { success: false, message: data.message };

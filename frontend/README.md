@@ -40,14 +40,14 @@ A modern job search and career management app built with Expo React Native and a
      EMAIL_USER=your-email@gmail.com
      EMAIL_PASS=your-app-password
      EMAIL_SERVICE=gmail
-     PORT=5000
+     PORT=5001
      ```
    - For Gmail, you may need to create an App Password: https://support.google.com/accounts/answer/185833
 4. **Start the backend server:**
    ```bash
    npm run dev
    ```
-   The server will run on `http://localhost:5000`.
+   The server will run on `http://localhost:5001`.
 
 ---
 
@@ -66,7 +66,7 @@ A modern job search and career management app built with Expo React Native and a
    - Or run on an emulator/simulator
 
 **Note:**
-- The frontend expects the backend to be running at `http://localhost:5000`. If testing on a real device, use your computer's local IP address in `contexts/AuthContext.tsx` for `API_BASE_URL`.
+- The frontend expects the backend to be running at `http://localhost:5001`. If testing on a real device, use your computer's local IP address in `contexts/AuthContext.tsx` for `API_BASE_URL`.
 
 ---
 

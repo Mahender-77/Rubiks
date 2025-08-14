@@ -26,13 +26,13 @@ const ResumeTemplate = ({ user, onClose }: ResumeTemplateProps) => (
       {/* HEADER SECTION */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
-          {user?.profile?.image && (
-            <Image source={{ uri: user.profile.image }} style={styles.profileImage} />
-          )}
           <View style={styles.nameSection}>
             <Text style={styles.name}>{user?.name}</Text>
             <Text style={styles.headline}>{user?.profile?.headline}</Text>
           </View>
+          {user?.profile?.avatar ? (
+            <Image source={{ uri: user.profile.avatar }} style={styles.profileImage} />
+          ) : null}
         </View>
       </View>
 
@@ -65,17 +65,13 @@ const ResumeTemplate = ({ user, onClose }: ResumeTemplateProps) => (
           {/* <Text style={styles.profileContent}>{user?.profile?.bio}</Text> */}
 
           <Text style={styles.leftSectionTitle}>SKILLS</Text>
-          <View style={styles.skillsSection}>
-            <Text style={styles.skillItem}>• Web design</Text>
-            <Text style={styles.skillItem}>• Design thinking</Text>
-            <Text style={styles.skillItem}>• Wireframe creation</Text>
-            <Text style={styles.skillItem}>• Front-end coding</Text>
-            <Text style={styles.skillItem}>• Problem solving</Text>
-            <Text style={styles.skillItem}>• Project Management Tools</Text>
-            <Text style={styles.skillItem}>• Strong Communication</Text>
-            <Text style={styles.skillItem}>• Team Player</Text>
-          </View>
+            {user?.profile?.skills?.map((skill: string, index: number) => (
+              <View key={index} style={styles.skillsSection}>
+                <Text style={styles.skillItem}>• {skill}</Text>
+                </View>
 
+            ))}
+          
           <Text style={styles.leftSectionTitle}>EDUCATION</Text>
           {user?.profile?.education?.map((edu: {
             degree: string;
@@ -161,9 +157,9 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: "90%",
-    height: "90%",
+    height: "60%",
     backgroundColor: "#fff",
-    borderRadius: 12,
+    // borderRadius: 12,
     overflow: "hidden",
   },
   container: { 
@@ -181,18 +177,20 @@ const styles = StyleSheet.create({
   },
   header: { 
     backgroundColor: "#E5E7EB",
-    paddingVertical: 20
+    paddingVertical: 16
   },
   headerContent: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 20,
   },
   profileImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginRight: 20,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    borderWidth: 2,
+    borderColor: "#fff",
   },
   nameSection: {
     flex: 1,
@@ -215,6 +213,7 @@ const styles = StyleSheet.create({
   },
   leftColumn: { 
     flex: 0.35, 
+    height: "100%",
     backgroundColor: "#E5E7EB",
     paddingHorizontal: 20,
     paddingVertical: 20
@@ -241,7 +240,7 @@ const styles = StyleSheet.create({
   leftSectionTitle: { 
     fontSize: 14, 
     fontWeight: "bold", 
-    marginBottom: 12, 
+    marginBottom: 8, 
     color: "#000",
     letterSpacing: 1,
     textTransform: "uppercase"
@@ -253,13 +252,13 @@ const styles = StyleSheet.create({
     lineHeight: 18
   },
   skillsSection: {
-    marginBottom: 20
+    marginBottom: 16
   },
   skillItem: {
     fontSize: 12,
     color: "#374151",
-    marginBottom: 4,
-    lineHeight: 16
+    // marginBottom: 4,
+    // lineHeight: 16
   },
   educationItem: {
     marginBottom: 16
@@ -283,7 +282,7 @@ const styles = StyleSheet.create({
   rightSectionTitle: { 
     fontSize: 14, 
     fontWeight: "bold", 
-    marginBottom: 20, 
+    marginBottom: 10, 
     color: "#000",
     letterSpacing: 1,
     textTransform: "uppercase"
@@ -295,7 +294,7 @@ const styles = StyleSheet.create({
     borderBottomColor: "#E5E7EB"
   },
   jobTitle: {
-    fontSize: 14,
+    fontSize: 8,
     fontWeight: "bold",
     color: "#000",
     textTransform: "uppercase",

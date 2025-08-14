@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Clock, CheckCircle, XCircle, AlertCircle, Building } from 'lucide-react-native';
-import { JobApplication } from '@/types';
+import { JobApplication } from '../../types/job';
+
 
 export function RecentApplications() {
   const router = useRouter();

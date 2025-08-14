@@ -65,16 +65,7 @@ export default function RegisterScreen() {
       const result = await register(name, email, password);
       if (result.success) {
         setRegistrationSuccess(true);
-        Alert.alert(
-          'Registration Successful!',
-          'Please check your email to verify your account before logging in.',
-          [
-            {
-              text: 'OK',
-              onPress: () => router.push('/auth/login')
-            }
-          ]
-        );
+      
       } else {
         Alert.alert('Error', result.message);
       }

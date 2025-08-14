@@ -2,8 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Briefcase, MapPin, DollarSign, Clock, Building } from 'lucide-react-native';
-import { Job } from '@/types';
-
+import {Job} from "../../types/job"
 export function JobSuggestions() {
   const router = useRouter();
 
