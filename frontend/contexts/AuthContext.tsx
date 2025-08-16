@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -9,6 +15,7 @@ interface User {
   email: string;
   phone?: string;
   isEmailVerified: boolean;
+  role?: 'admin' | 'user'; // 👈 Add this
   profile: {
     avatar?: string;
     headline?: string;
@@ -29,14 +36,31 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
-  register: (name: string, email: string, password: string) => Promise<{ success: boolean; message: string }>;
+  login: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; message: string }>;
+  register: (
+    name: string,
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
-  forgotPassword: (email: string) => Promise<{ success: boolean; message: string }>;
-  resendVerification: (email: string) => Promise<{ success: boolean; message: string }>;
-  updateProfile: (profileData: any) => Promise<{ success: boolean; message: string }>;
-  updateAvatar: (avatar: string) => Promise<{ success: boolean; message: string }>;
-  updateContact: (contactData: any) => Promise<{ success: boolean; message: string }>;
+  forgotPassword: (
+    email: string
+  ) => Promise<{ success: boolean; message: string }>;
+  resendVerification: (
+    email: string
+  ) => Promise<{ success: boolean; message: string }>;
+  updateProfile: (
+    profileData: any
+  ) => Promise<{ success: boolean; message: string }>;
+  updateAvatar: (
+    avatar: string
+  ) => Promise<{ success: boolean; message: string }>;
+  updateContact: (
+    contactData: any
+  ) => Promise<{ success: boolean; message: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,19 +80,21 @@ interface AuthProviderProps {
 // Single base URL for API (auto-detected for development)
 const resolveBaseUrl = () => {
   // Allow override via Expo public env
-const envUrl = Constants.expoConfig?.extra?.API_URL as string | undefined;
-if (envUrl) return envUrl.replace(/\/$/, '');
+  const envUrl = Constants.expoConfig?.extra?.API_URL as string | undefined;
+  if (envUrl) return envUrl.replace(/\/$/, '');
 
   const defaultPort = 5001;
   // Try to infer host from Expo dev server
   const hostUri = (Constants.expoConfig as any)?.hostUri as string | undefined;
   let host = hostUri ? hostUri.split(':')[0] : undefined;
   if (!host) {
-    const dbg = (Constants as any)?.manifest2?.extra?.expoGo?.debuggerHost || (Constants as any)?.manifest?.debuggerHost;
+    const dbg =
+      (Constants as any)?.manifest2?.extra?.expoGo?.debuggerHost ||
+      (Constants as any)?.manifest?.debuggerHost;
     if (typeof dbg === 'string') host = dbg.split(':')[0];
   }
   if (!host) {
-    host = Platform.OS === 'ios' ? '127.0.0.1' : '10.0.2.2';
+    host = Platform.OS === 'ios' ? '10.110.180.47' : '10.110.180.47';
   }
   return `http://${host}:${defaultPort}/api`;
 };
@@ -90,7 +116,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const storedToken = await AsyncStorage.getItem('authToken');
       const storedUser = await AsyncStorage.getItem('authUser');
-      
+     
+
       if (storedToken && storedUser) {
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
@@ -102,20 +129,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
- const storeAuth = async (newToken: string, newUser: User) => {
-  if (!newToken || !newUser) {
-    console.error("storeAuth called with invalid data:", { newToken, newUser });
-    return;
-  }
-  try {
-    await AsyncStorage.setItem('authToken', newToken);
-    await AsyncStorage.setItem('authUser', JSON.stringify(newUser));
-    setToken(newToken);
-    setUser(newUser);
-  } catch (error) {
-    console.error('Error storing auth:', error);
-  }
-};
+  const storeAuth = async (newToken: string, newUser: User) => {
+    if (!newToken || !newUser) {
+      console.error('storeAuth called with invalid data:', {
+        newToken,
+        newUser,
+      });
+      return;
+    }
+    try {
+      await AsyncStorage.setItem('authToken', newToken);
+      await AsyncStorage.setItem('authUser', JSON.stringify(newUser));
+      setToken(newToken);
+      setUser(newUser);
+    } catch (error) {
+      console.error('Error storing auth:', error);
+    }
+  };
 
   const clearAuth = async () => {
     try {
@@ -128,38 +158,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-const login = async (email: string, password: string) => {
-  try {
-    const response = await fetch(`${AUTH_URL}/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
+  const login = async (email: string, password: string) => {
+    console.log('Attempting login with:', { email, password });
+    try {
+      const response = await fetch(`${AUTH_URL}/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
+      console.log('Login response:', data);
 
-    if (data.success) {
-      // backend sends user and token inside data.data
-      const token = data.data?.token;
-      const user = data.data?.user;
+      if (data.success) {
+        // backend sends user and token inside data.data
+        const token = data.data?.token;
+        const user = data.data?.user;
 
-      if (!token || !user) {
-        return { success: false, message: 'Invalid server response: missing token or user' };
+        if (!token || !user) {
+          return {
+            success: false,
+            message: 'Invalid server response: missing token or user',
+          };
+        }
+
+        await storeAuth(token, user);
+        return { success: true, message: data.message };
+      } else {
+        return { success: false, message: data.message };
       }
-
-      await storeAuth(token, user);
-      return { success: true, message: data.message };
-    } else {
-      return { success: false, message: data.message };
+    } catch (error) {
+      console.error('Login error:', error);
+      return {
+        success: false,
+        message: 'Server not available. Please start the backend server.',
+      };
     }
-  } catch (error) {
-    console.error('Login error:', error);
-    return { success: false, message: 'Server not available. Please start the backend server.' };
-  }
-};
-
+  };
 
   const register = async (name: string, email: string, password: string) => {
     try {
@@ -181,7 +218,10 @@ const login = async (email: string, password: string) => {
       }
     } catch (error) {
       console.error('Register error:', error);
-      return { success: false, message: 'Server not available. Please start the backend server.' };
+      return {
+        success: false,
+        message: 'Server not available. Please start the backend server.',
+      };
     }
   };
 
@@ -203,7 +243,10 @@ const login = async (email: string, password: string) => {
       return { success: data.success, message: data.message };
     } catch (error) {
       console.error('Forgot password error:', error);
-      return { success: false, message: 'Server not available. Please start the backend server.' };
+      return {
+        success: false,
+        message: 'Server not available. Please start the backend server.',
+      };
     }
   };
 
@@ -221,60 +264,68 @@ const login = async (email: string, password: string) => {
       return { success: data.success, message: data.message };
     } catch (error) {
       console.error('Resend verification error:', error);
-      return { success: false, message: 'Server not available. Please start the backend server.' };
+      return {
+        success: false,
+        message: 'Server not available. Please start the backend server.',
+      };
     }
   };
 
-const updateProfile = async (profileData: any) => {
-  try {
-    const response = await fetch(`${PROFILE_URL}/basic`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(profileData),
-    });
+  const updateProfile = async (profileData: any) => {
+    try {
+      const response = await fetch(`${PROFILE_URL}/basic`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(profileData),
+      });
 
-    const data = await response.json();
-    if (data.success && data.user) {
-      setUser(data.user);
-      await AsyncStorage.setItem('authUser', JSON.stringify(data.user));
-      return { success: true, message: data.message };
-    } else {
-      return { success: false, message: data.message };
+      const data = await response.json();
+      if (data.success && data.user) {
+        setUser(data.user);
+        await AsyncStorage.setItem('authUser', JSON.stringify(data.user));
+        return { success: true, message: data.message };
+      } else {
+        return { success: false, message: data.message };
+      }
+    } catch (error) {
+      console.error('Update profile error:', error);
+      return {
+        success: false,
+        message: 'Server not available. Please start the backend server.',
+      };
     }
-  } catch (error) {
-    console.error('Update profile error:', error);
-    return { success: false, message: 'Server not available. Please start the backend server.' };
-  }
-};
+  };
 
-const updateAvatar = async (avatar: string) => {
-  try {
-    const response = await fetch(`${PROFILE_URL}/avatar`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({ avatar }),
-    });
+  const updateAvatar = async (avatar: string) => {
+    try {
+      const response = await fetch(`${PROFILE_URL}/avatar`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ avatar }),
+      });
 
-    const data = await response.json();
-    if (data.success && data.user) {
-      setUser(data.user);
-      await AsyncStorage.setItem('authUser', JSON.stringify(data.user));
-      return { success: true, message: data.message };
-    } else {
-      return { success: false, message: data.message };
+      const data = await response.json();
+      if (data.success && data.user) {
+        setUser(data.user);
+        await AsyncStorage.setItem('authUser', JSON.stringify(data.user));
+        return { success: true, message: data.message };
+      } else {
+        return { success: false, message: data.message };
+      }
+    } catch (error) {
+      console.error('Update avatar error:', error);
+      return {
+        success: false,
+        message: 'Server not available. Please start the backend server.',
+      };
     }
-  } catch (error) {
-    console.error('Update avatar error:', error);
-    return { success: false, message: 'Server not available. Please start the backend server.' };
-  }
-};
-
+  };
 
   const updateContact = async (contactData: any) => {
     try {
@@ -282,7 +333,7 @@ const updateAvatar = async (avatar: string) => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(contactData),
       });
@@ -297,7 +348,10 @@ const updateAvatar = async (avatar: string) => {
       }
     } catch (error) {
       console.error('Update contact error:', error);
-      return { success: false, message: 'Server not available. Please start the backend server.' };
+      return {
+        success: false,
+        message: 'Server not available. Please start the backend server.',
+      };
     }
   };
 

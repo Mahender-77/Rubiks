@@ -1,86 +1,94 @@
-import React, { useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { useAuth } from '../contexts/AuthContext';
-import { LinearGradient } from 'expo-linear-gradient';
+// import React, { useEffect } from 'react';
+// import {
+//   View,
+//   Text,
+//   StyleSheet,
+//   ActivityIndicator,
+// } from 'react-native';
+// import { useRouter } from 'expo-router';
+// import { useAuth } from '../contexts/AuthContext';
+// import { LinearGradient } from 'expo-linear-gradient';
 
-export default function WelcomeScreen() {
-  const router = useRouter();
-  const { user, isLoading } = useAuth();
+// export default function WelcomeScreen() {
+//   const router = useRouter();
+//   const { user, isLoading } = useAuth();
+//   console.log('WelcomeScreen user:', user);
 
-  useEffect(() => {
-    const handleNavigation = async () => {
-      if (!isLoading) {
-        try {
-          if (user) {
-            // User is logged in, redirect to main app
-            router.replace('/(tabs)');
-          } else {
-            // User is not logged in, redirect to   login
-            router.replace('/auth/login');
-          }
-        } catch (error) {
-          console.error('Navigation error:', error);
-          // Fallback to login if navigation fails
-          router.replace('/auth/login');
-        }
-      }
-    };
+// useEffect(() => {
+//   const handleNavigation = async () => {
+//     if (!isLoading) {
+//       console.log("isLoading:", isLoading);
+//       console.log("user object:", user);
 
-    handleNavigation();
-  }, [user, isLoading, router]);
+//       try {
+//         if (user) {
+//           console.log("role field:", user.role);
+//           if (user.role === 'admin') {
+//             router.replace('/(admin)');
+//           } else {
+//             router.replace('/(tabs)');
+//           }
+//         } else {
+//           router.replace('/auth/login');
+//         }
+//       } catch (error) {
+//         console.error('Navigation error:', error);
+//         router.replace('/auth/login');
+//       }
+//     }
+//   };
 
-  return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={['#667eea', '#764ba2']}
-        style={styles.gradient}
-      >
-        <View style={styles.content}>
-          <Text style={styles.title}>Rubiks</Text>
-          <Text style={styles.subtitle}>Your Job Search Companion</Text>
-          <ActivityIndicator size="large" color="white" style={styles.loader} />
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
-      </LinearGradient>
-    </View>
-  );
-}
+//   handleNavigation();
+// }, [user, isLoading, router]);
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  gradient: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  content: {
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 48,
-    fontWeight: '700',
-    color: 'white',
-    marginBottom: 16,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: 'rgba(255, 255, 255, 0.8)',
-    textAlign: 'center',
-    marginBottom: 40,
-  },
-  loader: {
-    marginBottom: 20,
-  },
-  loadingText: {
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: 16,
-  },
-});
+
+
+//   return (
+//     <View style={styles.container}>
+//       <LinearGradient
+//         colors={['#667eea', '#764ba2']}
+//         style={styles.gradient}
+//       >
+//         <View style={styles.content}>
+//           <Text style={styles.title}>Rubiks</Text>
+//           <Text style={styles.subtitle}>Your Job Search Companion</Text>
+//           <ActivityIndicator size="large" color="white" style={styles.loader} />
+//           <Text style={styles.loadingText}>Loading...</Text>
+//         </View>
+//       </LinearGradient>
+//     </View>
+//   );
+// }
+
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//   },
+//   gradient: {
+//     flex: 1,
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//   },
+//   content: {
+//     alignItems: 'center',
+//   },
+//   title: {
+//     fontSize: 48,
+//     fontWeight: '700',
+//     color: 'white',
+//     marginBottom: 16,
+//   },
+//   subtitle: {
+//     fontSize: 18,
+//     color: 'rgba(255, 255, 255, 0.8)',
+//     textAlign: 'center',
+//     marginBottom: 40,
+//   },
+//   loader: {
+//     marginBottom: 20,
+//   },
+//   loadingText: {
+//     color: 'rgba(255, 255, 255, 0.8)',
+//     fontSize: 16,
+//   },
+// });

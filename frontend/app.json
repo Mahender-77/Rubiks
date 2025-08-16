@@ -9,7 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
      "extra": {
-      "API_URL": "http://localhost:5001/api"  // <-- your backend URL
+      "API_URL": "http://localhost:5001/api" , // <-- your backend URL
+       "router": {},
+      "eas": {
+        "projectId": "181f37a6-7b40-4627-98c4-0fbd7238f22f"
+      }
     },
     "ios": {
       "supportsTablet": true
@@ -27,12 +31,7 @@
     "experiments": {
       "typedRoutes": true
     },
-    "extra": {
-      "router": {},
-      "eas": {
-        "projectId": "181f37a6-7b40-4627-98c4-0fbd7238f22f"
-      }
-    },
+  
     "android": {
       "package": "com.mahi77.rubiksapp"
     }

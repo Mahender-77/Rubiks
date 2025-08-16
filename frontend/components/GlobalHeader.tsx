@@ -15,7 +15,6 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ title }) => {
   const { user } = useAuth();
   const router = useRouter();
 
-  // console.log('GlobalHeader user:', user);
 
   const handleProfilePress = () => {
       router.push('/home/profile');
