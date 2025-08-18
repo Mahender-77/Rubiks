@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     width: "90%",
     height: "60%",
     backgroundColor: "#fff",
-    // borderRadius: 12,
+    borderRadius: 12,
     overflow: "hidden",
   },
   container: { 
@@ -213,7 +213,6 @@ const styles = StyleSheet.create({
   },
   leftColumn: { 
     flex: 0.35, 
-    height: "100%",
     backgroundColor: "#E5E7EB",
     paddingHorizontal: 20,
     paddingVertical: 20

@@ -12,13 +12,20 @@ interface GlobalHeaderProps {
 
 export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ title }) => {
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
+  const [role, setRole] = React.useState(user?.role || 'user');
 
-  // console.log('GlobalHeader user:', user);
+  const handlePress = () => {
+    if (isLoading) return; // Prevent navigation if loading
+    if (user?.role === 'admin') {
+      return;
+    }
+    return handleProfilePress;
+  };
 
   const handleProfilePress = () => {
-      router.push('/home/profile');
+    router.push('/home/profile');
   };
 
   return (
@@ -26,28 +33,31 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ title }) => {
       <View style={styles.leftSection}>
         <Text style={styles.appName}>Rubiks</Text>
       </View>
-      
+
       {title && (
         <View style={styles.centerSection}>
           <Text style={styles.title}>{title}</Text>
         </View>
       )}
-      
+
       <View style={styles.rightSection}>
-       
-        <TouchableOpacity style={styles.profileButton} onPress={handleProfilePress}>
+        <TouchableOpacity
+          style={styles.profileButton}
+          onPress={role === 'admin' ? undefined : handleProfilePress}
+        >
           <View style={styles.profileContainer}>
             <Text style={styles.userName}>{user?.name || 'User'}</Text>
             {user?.profile?.avatar ? (
-              <Image source={{ uri: user.profile.avatar }} style={styles.avatar} />
+              <Image
+                source={{ uri: user.profile.avatar }}
+                style={styles.avatar}
+              />
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <User size={16} color="#60A5FA" />
               </View>
             )}
-            
           </View>
-           
         </TouchableOpacity>
         <TouchableOpacity style={styles.notificationButton}>
           <Bell size={20} color="#64748B" />

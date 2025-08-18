@@ -42,11 +42,12 @@ export const register = async (req: Request, res: Response) => {
       // Check for validation errors
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        return res.status(400).json({
+         res.status(400).json({
           success: false,
           message: 'Validation failed',
           errors: errors.array()
         });
+        return;
       }
 
       const { email, password } = req.body;
@@ -54,19 +55,21 @@ export const register = async (req: Request, res: Response) => {
       // Find user by email
       const user = await User.findOne({ email: email.toLowerCase() });
       if (!user) {
-        return res.status(401).json({
+        res.status(401).json({
           success: false,
           message: 'Invalid email or password'
         });
+        return;
       }
-
+      
       // Check password
       const isPasswordValid = await user.comparePassword(password);
       if (!isPasswordValid) {
-        return res.status(401).json({
+         res.status(401).json({
           success: false,
           message: 'Invalid email or password'
         });
+        return;
       }
 
       // Generate JWT token
@@ -89,12 +92,13 @@ export const register = async (req: Request, res: Response) => {
         profile = new Profile({ userId: user._id });
         await profile.save();
       }
-
+     
       const userResponse = {
         id: user._id,
         name: user.name,
         email: user.email,
         phone: user.phone,
+        role:user.role,
         isEmailVerified: user.isEmailVerified,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
@@ -112,6 +116,7 @@ export const register = async (req: Request, res: Response) => {
         },
       };
 
+     
       res.json({
         success: true,
         message: 'Login successful',

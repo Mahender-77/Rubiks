@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import authRoutes from './routes/auth';
 import profileRoutes from './routes/profile';
+import adminRoutes from './routes/admin'; // Import admin routes
 import {Response , Request ,NextFunction} from 'express';
 
 // Load env from server/config.env
@@ -32,6 +33,7 @@ mongoose.connect(process.env.MONGODB_URI)
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
