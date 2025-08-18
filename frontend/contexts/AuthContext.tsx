@@ -61,6 +61,13 @@ interface AuthContextType {
   updateContact: (
     contactData: any
   ) => Promise<{ success: boolean; message: string }>;
+  addJob: (
+    jobData: any
+  ) => Promise<{ success: boolean; message: string }>;
+  getJobs: () => Promise<{ success: boolean; jobs?: any[]; message?: string }>;
+  getJobDetails: (
+    jobId: string | null
+  ) => Promise<any | null>; // 👈 Add this
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -94,14 +101,15 @@ const resolveBaseUrl = () => {
     if (typeof dbg === 'string') host = dbg.split(':')[0];
   }
   if (!host) {
-    host = Platform.OS === 'ios' ? '10.110.180.47' : '10.110.180.47';
+    host = Platform.OS === 'ios' ? '192.168.1.105' : '192.168.1.105';
   }
   return `http://${host}:${defaultPort}/api`;
 };
 
 const BASE_URL = resolveBaseUrl();
-const AUTH_URL = `${BASE_URL}/auth`;
-const PROFILE_URL = `${BASE_URL}/profile`;
+const AUTH_URL = `http://192.168.1.105:5001/api/auth`;
+const PROFILE_URL = `http://192.168.1.105:5001/api/profile`;
+const ADMIN_URL = `http://192.168.1.105:5001/api/admin`;
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -116,7 +124,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const storedToken = await AsyncStorage.getItem('authToken');
       const storedUser = await AsyncStorage.getItem('authUser');
-     
 
       if (storedToken && storedUser) {
         setToken(storedToken);
@@ -159,7 +166,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const login = async (email: string, password: string) => {
-    console.log('Attempting login with:', { email, password });
+    
     try {
       const response = await fetch(`${AUTH_URL}/login`, {
         method: 'POST',
@@ -170,7 +177,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       const data = await response.json();
-      console.log('Login response:', data);
+    
 
       if (data.success) {
         // backend sends user and token inside data.data
@@ -355,6 +362,83 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const addJob = async (jobData: any) => {
+    try {
+      const response = await fetch(`${ADMIN_URL}/jobs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json', 
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(jobData),
+      });
+      const data = await response.json();
+      if (data.success) {
+        return { success: true, message: 'Job added successfully' };
+     
+      } else {
+        return { success: false, message: data.message };
+      }
+    } catch (error) {
+      console.error('Add job error:', error);
+      return {
+        success: false,
+        message: 'Server not available. Please start the backend server.',
+      };
+    }
+  }
+
+  const getJobs = async () => {
+    try {
+
+      const response = await fetch(`${ADMIN_URL}/getJobs`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      if (data.success) {
+        
+        return { success: true, jobs: data.jobs };
+      }
+      return { success: false, message: data.message };
+    } catch (error) {
+      console.error('Get jobs error:', error);
+      return {
+        success: false,
+        message: 'Server not available. Please start the backend server.',
+      };
+    }
+  }
+
+  const getJobDetails = async (jobId: string | null) => {
+    if (!jobId) {
+      console.error('getJobDetails called with null jobId');
+      return null;
+    }
+    try {
+      const response = await fetch(`${ADMIN_URL}/job/${jobId}`, {
+        method: 'GET',  
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json(); 
+      if (data.success) {
+        return data.job; 
+      }
+      console.error('Get job details error:', data.message);
+      return null;
+    }
+    catch (error) {
+      console.error('Get job details error:', error);
+      return null;
+    }
+  };
+
   const value: AuthContextType = {
     user,
     token,
@@ -367,6 +451,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     updateProfile,
     updateAvatar,
     updateContact,
+    getJobs,
+    addJob, // 👈 Add this
+    getJobDetails, // 👈 Add this
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
