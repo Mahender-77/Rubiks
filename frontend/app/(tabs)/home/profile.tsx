@@ -29,8 +29,9 @@ import ResumeModal from '../../../components/ResumeModel';
 import { useAuth } from '../../../contexts/AuthContext';
 
 
+
 export default function ProfileScreen() {
-  const { user, logout, updateProfile, updateAvatar, updateContact } = useAuth();
+  const { user ,logout,updateAvatar,updateProfile,updateContact} = useAuth();
   const router = useRouter();
 
   // Resume Modal State

@@ -22,6 +22,7 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   
   const router = useRouter();
+  
   const { login } = useAuth();
 
   const handleLogin = async () => {

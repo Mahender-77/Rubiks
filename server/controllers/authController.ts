@@ -38,6 +38,7 @@ export const register = async (req: Request, res: Response) => {
 
   // Login user
   export const login = async (req:Request, res:Response)=> {
+    console.log('Login request body:', req.body);
     try {
       // Check for validation errors
       const errors = validationResult(req);

@@ -61,13 +61,9 @@ interface AuthContextType {
   updateContact: (
     contactData: any
   ) => Promise<{ success: boolean; message: string }>;
-  addJob: (
-    jobData: any
-  ) => Promise<{ success: boolean; message: string }>;
+  addJob: (jobData: any) => Promise<{ success: boolean; message: string }>;
   getJobs: () => Promise<{ success: boolean; jobs?: any[]; message?: string }>;
-  getJobDetails: (
-    jobId: string | null
-  ) => Promise<any | null>; // 👈 Add this
+  getJobDetails: (jobId: string | null) => Promise<any | null>; // 👈 Add this
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -101,15 +97,15 @@ const resolveBaseUrl = () => {
     if (typeof dbg === 'string') host = dbg.split(':')[0];
   }
   if (!host) {
-    host = Platform.OS === 'ios' ? '192.168.1.105' : '192.168.1.105';
+    host = Platform.OS === 'ios' ? '192.168.1.106' : '192.168.1.106';
   }
   return `http://${host}:${defaultPort}/api`;
 };
 
 const BASE_URL = resolveBaseUrl();
-const AUTH_URL = `http://192.168.1.105:5001/api/auth`;
-const PROFILE_URL = `http://192.168.1.105:5001/api/profile`;
-const ADMIN_URL = `http://192.168.1.105:5001/api/admin`;
+const AUTH_URL = `http://192.168.1.106:5001/api/auth`;
+const PROFILE_URL = `http://192.168.1.106:5001/api/profile`;
+const ADMIN_URL = `http://192.168.1.106:5001/api/admin`;
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -166,7 +162,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const login = async (email: string, password: string) => {
-    
     try {
       const response = await fetch(`${AUTH_URL}/login`, {
         method: 'POST',
@@ -177,7 +172,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
 
       const data = await response.json();
-    
 
       if (data.success) {
         // backend sends user and token inside data.data
@@ -367,7 +361,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await fetch(`${ADMIN_URL}/jobs`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json', 
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(jobData),
@@ -375,7 +369,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const data = await response.json();
       if (data.success) {
         return { success: true, message: 'Job added successfully' };
-     
       } else {
         return { success: false, message: data.message };
       }
@@ -386,11 +379,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         message: 'Server not available. Please start the backend server.',
       };
     }
-  }
+  };
 
   const getJobs = async () => {
     try {
-
       const response = await fetch(`${ADMIN_URL}/getJobs`, {
         method: 'GET',
         headers: {
@@ -400,7 +392,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       const data = await response.json();
       if (data.success) {
-        
         return { success: true, jobs: data.jobs };
       }
       return { success: false, message: data.message };
@@ -411,7 +402,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         message: 'Server not available. Please start the backend server.',
       };
     }
-  }
+  };
 
   const getJobDetails = async (jobId: string | null) => {
     if (!jobId) {
@@ -420,20 +411,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
     try {
       const response = await fetch(`${ADMIN_URL}/job/${jobId}`, {
-        method: 'GET',  
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
       });
-      const data = await response.json(); 
+      const data = await response.json();
       if (data.success) {
-        return data.job; 
+        return data.job;
       }
       console.error('Get job details error:', data.message);
       return null;
-    }
-    catch (error) {
+    } catch (error) {
       console.error('Get job details error:', error);
       return null;
     }
