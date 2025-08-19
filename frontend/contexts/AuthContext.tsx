@@ -64,6 +64,8 @@ interface AuthContextType {
   addJob: (jobData: any) => Promise<{ success: boolean; message: string }>;
   getJobs: () => Promise<{ success: boolean; jobs?: any[]; message?: string }>;
   getJobDetails: (jobId: string | null) => Promise<any | null>; // 👈 Add this
+  deleteJob: (id: string) => Promise<{ success: boolean; message: string }>;
+  updateJob: (jobData: any) => Promise<{ success: boolean; message: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -404,13 +406,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const getJobDetails = async (jobId: string | null) => {
-    if (!jobId) {
+  const getJobDetails = async (id: string | null) => {
+    console.log('getJobDetails called with jobId:', id);
+    if (!id) {
       console.error('getJobDetails called with null jobId');
       return null;
     }
     try {
-      const response = await fetch(`${ADMIN_URL}/job/${jobId}`, {
+      const response = await fetch(`${ADMIN_URL}/job/${id}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -429,6 +432,53 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const deleteJob = async (id: string) => {
+    try {
+      const response = await fetch(`${ADMIN_URL}/deletejob/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      if (data.success) {
+        return { success: true, message: 'Job deleted successfully' };
+      }
+      return { success: false, message: data.message };
+    } catch (error) {
+      console.error('Delete job error:', error);
+      return {
+        success: false,
+        message: 'Server not available. Please start the backend server.',
+      };
+    }
+  };
+
+  const updateJob = async (jobData: any) => {
+    try {
+      const response = await fetch(`${ADMIN_URL}/update/${jobData.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(jobData),
+      });
+      const data = await response.json();
+      if (data.success) {
+        return { success: true, message: 'Job updated successfully' };
+      }
+      return { success: false, message: data.message };
+    } catch (error) {
+      console.error('Update job error:', error);
+      return {
+        success: false,
+        message: 'Server not available. Please start the backend server.',
+      };
+    }
+  }
+
   const value: AuthContextType = {
     user,
     token,
@@ -444,6 +494,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     getJobs,
     addJob, // 👈 Add this
     getJobDetails, // 👈 Add this
+    deleteJob, // 👈 Add this
+    updateJob, // 👈 Add this
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

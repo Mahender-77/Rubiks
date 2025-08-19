@@ -1,27 +1,28 @@
 import {
-    Briefcase,
-    ChevronDown,
-    Edit3,
-    Eye,
-    Filter,
-    PlusCircle,
-    Search,
-    Trash2,
+  Briefcase,
+  ChevronDown,
+  Edit3,
+  Eye,
+  Filter,
+  PlusCircle,
+  Search,
+  Trash2,
 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { JobDetails } from '../../components/modals/jobDetails';
 import { useAuth } from '../../contexts/AuthContext';
+import { JobEdit } from '../../components/modals/jobEdit';
 
 export default function JobsAdmin() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -30,8 +31,10 @@ export default function JobsAdmin() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [jobDetails, setJobDetails] = useState(false);
   const [jobId, setJobId] = useState<string | null>(null);
+  const [editJob, setEditJob] = useState<any[]>([]);
+  const [showEditModel, setShowEditModel] = useState(false);
 
-  const { getJobs, addJob } = useAuth();
+  const { getJobs, addJob, deleteJob } = useAuth();
 
   // Dropdown states
   const [showJobTypeDropdown, setShowJobTypeDropdown] = useState(false);
@@ -174,6 +177,40 @@ export default function JobsAdmin() {
     }
   };
 
+  // Handle edit and delete actions
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteJob(id);
+      // Refresh job list after deletion
+      fetchJobs();
+    } catch (err) {
+      console.error('Failed to delete job:', err);
+    }
+  };
+  const handleEdit = (job: any) => {
+    setShowEditModel(true);
+    setEditJob([
+      {
+        title: job.title,
+        company: job.company,
+        location: job.location,
+        type: job.type,
+        salaryMin: job.salary?.min || '',
+        salaryMax: job.salary?.max || '',
+        currency: job.salary?.currency || 'USD',
+        salaryPeriod: job.salary?.salaryType || 'yearly',
+        description: job.description,
+        requirements: job.requirements.join(', '),
+        responsibilities: job.responsibilities.join(', '),
+        benefits: job.benefits.join(', '),
+        skills: job.skills.join(', '),
+        experience: job.experience,
+        education: job.education,
+        isActive: job.isActive,
+      },
+    ]);
+  };
+
   // Custom Dropdown Component
   const CustomDropdown = ({
     value,
@@ -268,14 +305,10 @@ export default function JobsAdmin() {
                   <View style={styles.jobCardHeader}>
                     <Text style={styles.jobCardTitle}>{job.title}</Text>
                     <View style={{ flexDirection: 'row', gap: 12 }}>
-                      <TouchableOpacity
-                      //    onPress={() => handleEdit(job)}
-                      >
+                      <TouchableOpacity onPress={() => handleEdit(job)}>
                         <Edit3 color="#87CEEB" size={18} />
                       </TouchableOpacity>
-                      <TouchableOpacity
-                      //   onPress={() => handleDelete(job._id)}
-                      >
+                      <TouchableOpacity onPress={() => handleDelete(job._id)}>
                         <Trash2 color="red" size={18} />
                       </TouchableOpacity>
                     </View>
@@ -323,7 +356,9 @@ export default function JobsAdmin() {
       <Modal visible={showAddModal} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Add New Job</Text>
+            <Text style={styles.modalTitle}>{`${
+              editJob.length === 0 ? 'Edit' : 'Add New Job'
+            }`}</Text>
 
             <ScrollView
               style={{ maxHeight: '80%' }}
@@ -483,15 +518,28 @@ export default function JobsAdmin() {
           </View>
         </View>
       </Modal>
-      {
-       jobDetails && (
+      {jobDetails && (
         <JobDetails
           jobDetails={jobDetails}
           jobId={jobId}
           setJobDetails={setJobDetails}
-          />
-        )
-      }
+        />
+      )}
+      {showEditModel && (
+        <JobEdit
+          showEditModel={showEditModel}
+          setShowEditModel={setShowEditModel}
+          editJob={editJob[0]}
+          CustomDropdown={CustomDropdown}
+          setEditJob={setEditJob}
+          setShowJobTypeDropdown={setShowJobTypeDropdown}
+          setShowCurrencyDropdown={setShowCurrencyDropdown}
+          setShowSalaryPeriodDropdown={setShowSalaryPeriodDropdown}
+          showJobTypeDropdown={showJobTypeDropdown}
+          showCurrencyDropdown={showCurrencyDropdown}
+          showSalaryPeriodDropdown={showSalaryPeriodDropdown}
+        />
+      )}
     </ScrollView>
   );
 }

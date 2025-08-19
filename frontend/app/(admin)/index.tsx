@@ -1,40 +1,25 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-  TextInput,
-  Alert,
-  Modal,
-  Dimensions,
-} from 'react-native';
-import {
-  BarChart3,
-  Users,
-  Briefcase,
-  Newspaper,
-  Settings,
-  Plus,
-  Search,
-  Bell,
-  TrendingUp,
-  Eye,
-  Edit3,
-  Trash2,
-  Upload,
-  Calendar,
-  MapPin,
-  DollarSign,
-  Filter,
-  MoreVertical,
-  CheckCircle,
-  XCircle,
-  Clock,
-  LogOut,
-} from 'lucide-react-native';
 import { router } from 'expo-router';
+import {
+  Bell,
+  Briefcase,
+  Eye,
+  LogOut,
+  MoreVertical,
+  TrendingUp,
+  Upload,
+  Users
+} from 'lucide-react-native';
+import { useState } from 'react';
+import {
+  Alert,
+  Dimensions,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 
 const { width, height } = Dimensions.get('window');
