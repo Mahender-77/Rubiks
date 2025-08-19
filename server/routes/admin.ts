@@ -10,8 +10,9 @@ router.get("/getJobs", getJobs);
 router.get("/job/:id", getJobById);
 
 // Protected (Admin only inside controller)
+router.delete("/deletejob/:id", authenticateToken, deleteJob);
 router.post("/jobs", authenticateToken, createJob);
-router.put("/:id", authenticateToken, updateJob);
-router.delete("/:id", authenticateToken, deleteJob);
+router.put("/updateJob/:id", authenticateToken, updateJob);
+// router.delete("/:id", authenticateToken, deleteJob);
 
 export default router;
