@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../../contexts/AuthContext';
+import { forgotPassword, useAuth } from '../../contexts/AuthContext';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react-native';
 
 export default function ForgotPasswordScreen() {
@@ -20,7 +20,7 @@ export default function ForgotPasswordScreen() {
   const [emailSent, setEmailSent] = useState(false);
   
   const router = useRouter();
-  const { forgotPassword } = useAuth();
+
 
   const handleForgotPassword = async () => {
     if (!email) {

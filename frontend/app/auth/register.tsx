@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../../contexts/AuthContext';
+import { register, useAuth } from '../../contexts/AuthContext';
 import { Eye, EyeOff, Mail, Lock, User, ArrowLeft, CheckCircle } from 'lucide-react-native';
 
 export default function RegisterScreen() {
@@ -25,7 +25,7 @@ export default function RegisterScreen() {
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   
   const router = useRouter();
-  const { register } = useAuth();
+
 
   const validateForm = () => {
     if (!name || !email || !password || !confirmPassword) {

@@ -2,7 +2,7 @@ import { X } from 'lucide-react-native';
 import { Modal, Text, TouchableOpacity, View, StyleSheet } from 'react-native';
 import { Jobs } from '../../types/job';
 import { useEffect, useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+
 
 
 type JobDetailsProps = {
@@ -17,7 +17,7 @@ export function JobDetails({
   setJobDetails,
 }: JobDetailsProps) {
      const [jobData, setJobData] = useState<Jobs | null>(null);
-       const { getJobDetails } = useAuth();
+       
     //  useEffect(()=>{
     //      const JoDetails = getJobDetails(jobId);
     //      console.log("erjfn")

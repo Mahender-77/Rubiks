@@ -35,7 +35,7 @@ import {
   LogOut,
 } from "lucide-react-native";
 import { router } from "expo-router";
-import { useAuth } from "../../contexts/AuthContext";
+import { logout, useAuth } from "../../contexts/AuthContext";
 
 const { width, height } = Dimensions.get("window");
 
@@ -45,7 +45,7 @@ export default function AdminIndex() {
   const [searchQuery, setSearchQuery] = useState("");
   const [modalType, setModalType] = useState(""); // 'news' or 'job'
 
-  const { logout } = useAuth();
+  
 
   // Sample data
   const dashboardStats = {
