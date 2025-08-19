@@ -13,7 +13,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
 import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react-native';
-import { login} from '../../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -23,6 +23,7 @@ export default function LoginScreen() {
   
   const router = useRouter();
   
+  const { login } = useAuth();
 
   const handleLogin = async () => {
     if (!email || !password) {

@@ -26,11 +26,12 @@ import {
 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import ResumeModal from '../../../components/ResumeModel';
-import { logout, updateAvatar, updateContact, updateProfile, useAuth } from '../../../contexts/AuthContext';
+import { useAuth } from '../../../contexts/AuthContext';
+
 
 
 export default function ProfileScreen() {
-  const { user} = useAuth();
+  const { user ,logout,updateAvatar,updateProfile,updateContact} = useAuth();
   const router = useRouter();
 
   // Resume Modal State
