@@ -1,23 +1,30 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
-import { validationResult } from 'express-validator';
-import User from '../models/User';
-import Profile from '../models/Profile';
-import process from 'process';
-import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/emailService';
+import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
+import { validationResult } from "express-validator";
+import User from "../models/User.js";
+import Profile from "../models/Profile.js";
+import process from "process";
+import {
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+} from "../utils/emailService.js";
 
 // Register new user
-export const register = async (req: Request, res: Response, next: NextFunction) => {
+export const register = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { name, email, password, phone } = req.body;
 
     // Check if email already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Email already registered' 
+      return res.status(400).json({
+        success: false,
+        message: "Email already registered",
       });
     }
 
@@ -26,7 +33,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     const verificationToken = jwt.sign(
       { name, email, password, phone },
       jwtSecret,
-      { expiresIn: '24h' }
+      { expiresIn: "24h" }
     );
 
     // Send verification email
@@ -34,39 +41,43 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
 
     res.status(200).json({
       success: true,
-      message: 'Verification email sent. Please check your inbox.'
+      message: "Verification email sent. Please check your inbox.",
     });
   } catch (error) {
-    console.error('Register error:', error);
+    console.error("Register error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error during registration'
+      message: "Internal server error during registration",
     });
   }
 };
 
 // Login user
-export const login = async (req: Request, res: Response, next: NextFunction) => {
-  console.log('Login request body:', req.body);
+export const login = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  console.log("Login request body:", req.body);
   try {
     const { email, password } = req.body;
 
     // Find user by email
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-       res.status(401).json({
+      res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: "Invalid email or password",
       });
       return;
     }
-    
+
     // Check password
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
-       res.status(401).json({
+      res.status(401).json({
         success: false,
-        message: 'Invalid email or password'
+        message: "Invalid email or password",
       });
       return;
     }
@@ -74,16 +85,16 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     // Generate JWT token
     const jwtSecret = process.env.JWT_SECRET as string;
     if (!jwtSecret) {
-      throw new Error('JWT_SECRET is not defined in environment variables');
+      throw new Error("JWT_SECRET is not defined in environment variables");
     }
-    
+
     const token = jwt.sign(
-      { 
+      {
         userId: user._id,
-        email: user.email 
+        email: user.email,
       },
       jwtSecret,
-      { expiresIn: '7d' }
+      { expiresIn: "7d" }
     );
 
     // Ensure profile exists and build response
@@ -92,7 +103,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       profile = new Profile({ userId: user._id });
       await profile.save();
     }
-   
+
     const userResponse = {
       id: user._id,
       name: user.name,
@@ -118,24 +129,27 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
     res.json({
       success: true,
-      message: 'Login successful',
+      message: "Login successful",
       data: {
         user: userResponse,
-        token
-      }
+        token,
+      },
     });
-
   } catch (error) {
-    console.error('Login errorm:', error);
+    console.error("Login errorm:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error during login'
+      message: "Internal server error during login",
     });
   }
 };
 
 // Forgot password
-export const forgotPassword = async (req: Request, res: Response, next: NextFunction) => {
+export const forgotPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { email } = req.body;
 
@@ -145,12 +159,13 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
       // Don't reveal if email exists or not
       return res.json({
         success: true,
-        message: 'If an account with that email exists, we have sent a password reset link.'
+        message:
+          "If an account with that email exists, we have sent a password reset link.",
       });
     }
 
     // Generate password reset token
-    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetToken = crypto.randomBytes(32).toString("hex");
     const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
     // Save reset token to user
@@ -162,56 +177,59 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
     try {
       await sendPasswordResetEmail(user.email, resetToken, user.name);
     } catch (emailError) {
-      console.error('Password reset email sending failed:', emailError);
+      console.error("Password reset email sending failed:", emailError);
       return res.status(500).json({
         success: false,
-        message: 'Failed to send password reset email'
+        message: "Failed to send password reset email",
       });
     }
 
     res.json({
       success: true,
-      message: 'Password reset link sent to your email'
+      message: "Password reset link sent to your email",
     });
-
   } catch (error) {
-    console.error('Forgot password error:', error);
+    console.error("Forgot password error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
 
 // Reset password
-export const resetPassword = async (req: Request, res: Response, next: NextFunction) => {
+export const resetPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { token, newPassword } = req.body;
 
     if (!token || !newPassword) {
       return res.status(400).json({
         success: false,
-        message: 'Token and new password are required'
+        message: "Token and new password are required",
       });
     }
 
     if (newPassword.length < 6) {
       return res.status(400).json({
         success: false,
-        message: 'Password must be at least 6 characters'
+        message: "Password must be at least 6 characters",
       });
     }
 
     // Find user with valid reset token
     const user = await User.findOne({
       passwordResetToken: token,
-      passwordResetExpires: { $gt: Date.now() }
+      passwordResetExpires: { $gt: Date.now() },
     });
 
     if (!user) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid or expired reset token'
+        message: "Invalid or expired reset token",
       });
     }
 
@@ -223,20 +241,23 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
 
     res.json({
       success: true,
-      message: 'Password reset successfully'
+      message: "Password reset successfully",
     });
-
   } catch (error) {
-    console.error('Reset password error:', error);
+    console.error("Reset password error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
 
 // Resend email verification
-export const resendVerification = async (req: Request, res: Response, next: NextFunction) => {
+export const resendVerification = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { email } = req.body;
 
@@ -245,19 +266,19 @@ export const resendVerification = async (req: Request, res: Response, next: Next
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
 
     if (user.isEmailVerified) {
       return res.status(400).json({
         success: false,
-        message: 'Email is already verified'
+        message: "Email is already verified",
       });
     }
 
     // Generate new verification token
-    const emailVerificationToken = crypto.randomBytes(32).toString('hex');
+    const emailVerificationToken = crypto.randomBytes(32).toString("hex");
     const emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     user.emailVerificationToken = emailVerificationToken;
@@ -266,31 +287,38 @@ export const resendVerification = async (req: Request, res: Response, next: Next
 
     // Send verification email
     try {
-      await sendVerificationEmail(user.email, emailVerificationToken, user.name);
+      await sendVerificationEmail(
+        user.email,
+        emailVerificationToken,
+        user.name
+      );
     } catch (emailError) {
-      console.error('Verification email sending failed:', emailError);
+      console.error("Verification email sending failed:", emailError);
       return res.status(500).json({
         success: false,
-        message: 'Failed to send verification email'
+        message: "Failed to send verification email",
       });
     }
 
     res.json({
       success: true,
-      message: 'Verification email sent successfully'
+      message: "Verification email sent successfully",
     });
-
   } catch (error) {
-    console.error('Resend verification error:', error);
+    console.error("Resend verification error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error'
+      message: "Internal server error",
     });
   }
 };
 
 // Verify email
-export const verifyEmail = async (req: Request, res: Response, next: NextFunction) => {
+export const verifyEmail = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { token } = req.params;
 
@@ -303,7 +331,9 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
     };
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email: decoded.email.toLowerCase() });
+    const existingUser = await User.findOne({
+      email: decoded.email.toLowerCase(),
+    });
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -326,7 +356,6 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
       success: true,
       message: "🎉 Email verified successfully. You can now log in.",
     });
-    
   } catch (error) {
     console.error("Email verification error:", error);
     res.status(400).json({
