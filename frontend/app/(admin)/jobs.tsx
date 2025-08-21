@@ -187,29 +187,30 @@ export default function JobsAdmin() {
       console.error('Failed to delete job:', err);
     }
   };
-  const handleEdit = (job: any) => {
-    setShowEditModel(true);
-    setEditJob([
-      {
-        title: job.title,
-        company: job.company,
-        location: job.location,
-        type: job.type,
-        salaryMin: job.salary?.min || '',
-        salaryMax: job.salary?.max || '',
-        currency: job.salary?.currency || 'USD',
-        salaryPeriod: job.salary?.salaryType || 'yearly',
-        description: job.description,
-        requirements: job.requirements.join(', '),
-        responsibilities: job.responsibilities.join(', '),
-        benefits: job.benefits.join(', '),
-        skills: job.skills.join(', '),
-        experience: job.experience,
-        education: job.education,
-        isActive: job.isActive,
-      },
-    ]);
-  };
+const handleEdit = (job: any) => {
+  setShowEditModel(true);
+  setEditJob([
+    {
+      id: job._id, // Make sure to include the job ID
+      title: job.title,
+      company: job.company,
+      location: job.location,
+      type: job.type,
+      salaryMin: job.salary?.min || '',
+      salaryMax: job.salary?.max || '',
+      currency: job.salary?.currency || 'USD',
+      salaryPeriod: job.salary?.salaryType || 'yearly',
+      description: job.description,
+      requirements: Array.isArray(job.requirements) ? job.requirements.join(', ') : job.requirements || '',
+      responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities.join(', ') : job.responsibilities || '',
+      benefits: Array.isArray(job.benefits) ? job.benefits.join(', ') : job.benefits || '',
+      skills: Array.isArray(job.skills) ? job.skills.join(', ') : job.skills || '',
+      experience: job.experience,
+      education: job.education,
+      isActive: job.isActive,
+    },
+  ]);
+};
 
   // Custom Dropdown Component
   const CustomDropdown = ({
@@ -525,21 +526,23 @@ export default function JobsAdmin() {
           setJobDetails={setJobDetails}
         />
       )}
-      {showEditModel && (
-        <JobEdit
-          showEditModel={showEditModel}
-          setShowEditModel={setShowEditModel}
-          editJob={editJob[0]}
-          CustomDropdown={CustomDropdown}
-          setEditJob={setEditJob}
-          setShowJobTypeDropdown={setShowJobTypeDropdown}
-          setShowCurrencyDropdown={setShowCurrencyDropdown}
-          setShowSalaryPeriodDropdown={setShowSalaryPeriodDropdown}
-          showJobTypeDropdown={showJobTypeDropdown}
-          showCurrencyDropdown={showCurrencyDropdown}
-          showSalaryPeriodDropdown={showSalaryPeriodDropdown}
-        />
-      )}
+{showEditModel && (
+  <JobEdit
+    showEditModel={showEditModel}
+    setShowEditModel={setShowEditModel}
+    editJob={editJob[0]}
+    CustomDropdown={CustomDropdown}
+    setEditJob={setEditJob}
+    setShowJobTypeDropdown={setShowJobTypeDropdown}
+    setShowCurrencyDropdown={setShowCurrencyDropdown}
+    setShowSalaryPeriodDropdown={setShowSalaryPeriodDropdown}
+    showJobTypeDropdown={showJobTypeDropdown}
+    showCurrencyDropdown={showCurrencyDropdown}
+    showSalaryPeriodDropdown={showSalaryPeriodDropdown}
+    fetchJobs={fetchJobs}
+    jobId={editJob[0]?.id || editJob[0]?._id} // Pass the job ID
+  />
+)}
     </ScrollView>
   );
 }

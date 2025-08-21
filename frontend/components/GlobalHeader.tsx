@@ -16,6 +16,8 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ title }) => {
   const router = useRouter();
   const [role, setRole] = React.useState(user?.role || 'user');
 
+  console.log('User role:', role);
+
   const handlePress = () => {
     if (isLoading) return; // Prevent navigation if loading
     if (user?.role === 'admin') {
@@ -43,7 +45,7 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ title }) => {
       <View style={styles.rightSection}>
         <TouchableOpacity
           style={styles.profileButton}
-          onPress={role === 'admin' ? undefined : handleProfilePress}
+          onPress={handleProfilePress}
         >
           <View style={styles.profileContainer}>
             <Text style={styles.userName}>{user?.name || 'User'}</Text>
