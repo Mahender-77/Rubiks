@@ -7,11 +7,34 @@ import {
   View,
   StyleSheet,
 } from 'react-native';
+import { useState, useEffect } from 'react';
 
 import { useAuth } from '../../contexts/AuthContext';
 
+// Define the interface for the job edit form data
+interface JobEditData {
+  id?: string;
+  _id?: string;
+  title: string;
+  company: string;
+  location: string;
+  type: 'full-time' | 'part-time' | 'contract' | 'internship';
+  salaryMin: string | number;
+  salaryMax: string | number;
+  currency: string;
+  salaryPeriod: string;
+  description: string;
+  requirements: string | string[];
+  responsibilities: string | string[];
+  benefits: string | string[];
+  skills: string | string[];
+  experience: string;
+  education: string;
+  isActive: boolean;
+}
+
 type JobEditProps = {
-  editJob: any;
+  editJob: JobEditData;
   CustomDropdown: any;
   setEditJob?: (job: any) => void;
   setShowJobTypeDropdown?: (visible: boolean) => void | undefined;
@@ -22,14 +45,16 @@ type JobEditProps = {
   showSalaryPeriodDropdown?: boolean;
   showEditModel: boolean;
   setShowEditModel: (visible: boolean) => void;
+  fetchJobs?: () => void;
+  jobId?: string;
 };
 
 // Dropdown options
 const jobTypes = [
-  { label: 'Full Time', value: 'full-time' },
-  { label: 'Part Time', value: 'part-time' },
-  { label: 'Contract', value: 'contract' },
-  { label: 'Internship', value: 'internship' },
+  { label: 'Full Time', value: 'full-time' as const },
+  { label: 'Part Time', value: 'part-time' as const },
+  { label: 'Contract', value: 'contract' as const },
+  { label: 'Internship', value: 'internship' as const },
 ];
 
 const currencies = [
@@ -45,6 +70,26 @@ const salaryPeriods = [
   { label: 'Per Month', value: 'monthly' },
 ];
 
+// Default job data
+const defaultJobData: JobEditData = {
+  title: '',
+  company: '',
+  location: '',
+  type: 'full-time',
+  salaryMin: '',
+  salaryMax: '',
+  currency: 'USD',
+  salaryPeriod: 'yearly',
+  description: '',
+  requirements: '',
+  responsibilities: '',
+  benefits: '',
+  skills: '',
+  experience: '',
+  education: '',
+  isActive: true,
+};
+
 export function JobEdit({
   editJob,
   CustomDropdown,
@@ -57,36 +102,107 @@ export function JobEdit({
   showSalaryPeriodDropdown,
   showEditModel,
   setShowEditModel,
+  fetchJobs,
+  jobId,
 }: JobEditProps) {
   const { updateJob } = useAuth();
+  
+  // Create local state with proper typing and default values
+  const [localJobData, setLocalJobData] = useState<JobEditData>(defaultJobData);
+
+  // Initialize local state when editJob changes
+  useEffect(() => {
+    if (editJob) {
+      setLocalJobData({
+        ...defaultJobData, // Start with defaults
+        ...editJob, // Override with actual data
+        // Ensure we have the job ID
+        id: editJob.id || editJob._id || jobId,
+        // Convert arrays to strings if they're arrays (for display in text inputs)
+        requirements: Array.isArray(editJob.requirements) 
+          ? editJob.requirements.join(', ') 
+          : editJob.requirements || '',
+        responsibilities: Array.isArray(editJob.responsibilities) 
+          ? editJob.responsibilities.join(', ') 
+          : editJob.responsibilities || '',
+        benefits: Array.isArray(editJob.benefits) 
+          ? editJob.benefits.join(', ') 
+          : editJob.benefits || '',
+        skills: Array.isArray(editJob.skills) 
+          ? editJob.skills.join(', ') 
+          : editJob.skills || '',
+      });
+    }
+  }, [editJob, jobId]);
 
   // Early return if editJob is not available
   if (!editJob) {
     return null;
   }
 
-  const handleChange = (key: string, value: string | boolean) => {
-    if (setEditJob) {
-      setEditJob({ ...editJob, [key]: value });
-    }
+  const handleChange = (key: keyof JobEditData, value: string | boolean) => {
+    setLocalJobData(prevData => ({
+      ...prevData,
+      [key]: value
+    }));
+
     // Close dropdowns when selection is made
     if (key === 'type') setShowJobTypeDropdown?.(false);
     if (key === 'currency') setShowCurrencyDropdown?.(false);
     if (key === 'salaryPeriod') setShowSalaryPeriodDropdown?.(false);
   };
 
-  const handleUpdateJob = () => {
-    const res = updateJob(editJob);
-    res.then((response) => {
+  const handleUpdateJob = async () => {
+    try {
+      // Ensure we have a job ID
+      const currentJobId = localJobData.id || localJobData._id || jobId;
+      if (!currentJobId) {
+        console.error("Job ID is missing");
+        return;
+      }
+
+      // Prepare the job data in the correct format for the backend
+      const jobPayload = {
+        ...localJobData,
+        id: currentJobId, // Ensure ID is included
+        salary: {
+          min: Number(localJobData.salaryMin),
+          max: Number(localJobData.salaryMax),
+          currency: localJobData.currency,
+          salaryType: localJobData.salaryPeriod, // Backend expects 'salaryType'
+        },
+        requirements: typeof localJobData.requirements === 'string' 
+          ? localJobData.requirements.split(',').map((r: string) => r.trim()).filter((r: string) => r)
+          : localJobData.requirements || [],
+        responsibilities: typeof localJobData.responsibilities === 'string'
+          ? localJobData.responsibilities.split(',').map((r: string) => r.trim()).filter((r: string) => r)
+          : localJobData.responsibilities || [],
+        benefits: typeof localJobData.benefits === 'string'
+          ? localJobData.benefits.split(',').map((b: string) => b.trim()).filter((b: string) => b)
+          : localJobData.benefits || [],
+        skills: typeof localJobData.skills === 'string'
+          ? localJobData.skills.split(',').map((s: string) => s.trim()).filter((s: string) => s)
+          : localJobData.skills || [],
+      };
+
+      console.log("Updating job with ID:", currentJobId);
+      console.log("Job payload:", jobPayload);
+
+      const response = await updateJob(jobPayload);
+      
       if (response.success) {
-        console.log("Job updated successfully:", response.success);
+        console.log("✅ Job updated successfully");
+        // Refresh the jobs list if function is provided
+        if (fetchJobs) {
+          fetchJobs();
+        }
         setShowEditModel(false); // Close modal on success
       } else {
-        console.error("Failed to update job:", response.message);
+        console.error("❌ Failed to update job:", response.message);
       }
-    }).catch((error) => {
-      console.error("Error updating job:", error);
-    });
+    } catch (error) {
+      console.error("❌ Error updating job:", error);
+    }
   };
 
   return (
@@ -97,7 +213,7 @@ export function JobEdit({
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Edit</Text>
+          <Text style={styles.modalTitle}>Edit Job</Text>
 
           <ScrollView
             style={{ maxHeight: '80%' }}
@@ -107,30 +223,30 @@ export function JobEdit({
             <TextInput
               style={styles.input}
               placeholder="Job Title *"
-              value={editJob?.title || ''}
+              value={localJobData.title}
               onChangeText={(val) => handleChange('title', val)}
             />
 
             <TextInput
               style={styles.input}
               placeholder="Company *"
-              value={editJob?.company || ''}
+              value={localJobData.company}
               onChangeText={(val) => handleChange('company', val)}
             />
 
             <TextInput
               style={styles.input}
               placeholder="Location *"
-              value={editJob?.location || ''}
+              value={localJobData.location}
               onChangeText={(val) => handleChange('location', val)}
             />
 
             {/* Job Type Dropdown */}
             <Text style={styles.fieldLabel}>Job Type *</Text>
             <CustomDropdown
-              value={editJob?.type || ''}
+              value={localJobData.type}
               options={jobTypes}
-              onSelect={(value) => handleChange('type', value)}
+              onSelect={(value: string) => handleChange('type', value as JobEditData['type'])}
               placeholder="Select Job Type"
               isVisible={showJobTypeDropdown}
               setVisible={setShowJobTypeDropdown}
@@ -144,14 +260,14 @@ export function JobEdit({
                 style={[styles.input, styles.salaryInput]}
                 placeholder="Min Salary *"
                 keyboardType="numeric"
-                value={editJob?.salaryMin?.toString() || ""}
+                value={localJobData.salaryMin.toString()}
                 onChangeText={(val) => handleChange('salaryMin', val)}
               />
               <TextInput
                 style={[styles.input, styles.salaryInput]}
                 placeholder="Max Salary *"
                 keyboardType="numeric"
-                value={editJob?.salaryMax?.toString() || ""}
+                value={localJobData.salaryMax.toString()}
                 onChangeText={(val) => handleChange('salaryMax', val)}
               />
             </View>
@@ -161,9 +277,9 @@ export function JobEdit({
               <View style={styles.halfWidth}>
                 <Text style={styles.fieldLabel}>Currency</Text>
                 <CustomDropdown
-                  value={editJob?.currency || ''}
+                  value={localJobData.currency}
                   options={currencies}
-                  onSelect={(value) => handleChange('currency', value)}
+                  onSelect={(value: string) => handleChange('currency', value)}
                   placeholder="Currency"
                   isVisible={showCurrencyDropdown}
                   setVisible={setShowCurrencyDropdown}
@@ -174,9 +290,9 @@ export function JobEdit({
               <View style={styles.halfWidth}>
                 <Text style={styles.fieldLabel}>Period</Text>
                 <CustomDropdown
-                  value={editJob?.salaryPeriod || ''}
+                  value={localJobData.salaryPeriod}
                   options={salaryPeriods}
-                  onSelect={(value) => handleChange('salaryPeriod', value)}
+                  onSelect={(value: string) => handleChange('salaryPeriod', value)}
                   placeholder="Salary Period"
                   isVisible={showSalaryPeriodDropdown}
                   setVisible={setShowSalaryPeriodDropdown}
@@ -190,7 +306,7 @@ export function JobEdit({
             <TextInput
               style={[styles.input, styles.textArea]}
               placeholder="Job Description *"
-              value={editJob?.description || ''}
+              value={localJobData.description}
               multiline
               numberOfLines={4}
               onChangeText={(val) => handleChange('description', val)}
@@ -199,50 +315,50 @@ export function JobEdit({
             <TextInput
               style={styles.input}
               placeholder="Requirements (comma separated)"
-              value={editJob?.requirements || ''}
+              value={typeof localJobData.requirements === 'string' ? localJobData.requirements : ''}
               onChangeText={(val) => handleChange('requirements', val)}
             />
 
             <TextInput
               style={styles.input}
               placeholder="Responsibilities (comma separated)"
-              value={editJob?.responsibilities || ''}
+              value={typeof localJobData.responsibilities === 'string' ? localJobData.responsibilities : ''}
               onChangeText={(val) => handleChange('responsibilities', val)}
             />
 
             <TextInput
               style={styles.input}
               placeholder="Benefits (comma separated)"
-              value={editJob?.benefits || ''}
+              value={typeof localJobData.benefits === 'string' ? localJobData.benefits : ''}
               onChangeText={(val) => handleChange('benefits', val)}
             />
 
             <TextInput
               style={styles.input}
               placeholder="Skills Required (comma separated)"
-              value={editJob?.skills || ''}
+              value={typeof localJobData.skills === 'string' ? localJobData.skills : ''}
               onChangeText={(val) => handleChange('skills', val)}
             />
 
             <TextInput
               style={styles.input}
               placeholder="Experience Required"
-              value={editJob?.experience || ''}
+              value={localJobData.experience}
               onChangeText={(val) => handleChange('experience', val)}
             />
 
             <TextInput
               style={styles.input}
               placeholder="Education Required"
-              value={editJob?.education || ''}
+              value={localJobData.education}
               onChangeText={(val) => handleChange('education', val)}
             />
           </ScrollView>
 
           {/* Action Buttons */}
           <View style={styles.modalActions}>
-            <TouchableOpacity style={styles.saveButton} onPress={() => handleUpdateJob()}>
-              <Text style={styles.saveButtonText}>Edit Job</Text>
+            <TouchableOpacity style={styles.saveButton} onPress={handleUpdateJob}>
+              <Text style={styles.saveButtonText}>Update Job</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.cancelButton}
@@ -258,7 +374,6 @@ export function JobEdit({
 }
 
 const styles = StyleSheet.create({
-  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -298,8 +413,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     fontWeight: '500',
   },
-  
-  // Form Styles
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
@@ -307,7 +420,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 12,
   },
-  // Salary Section
   salaryRow: {
     flexDirection: 'row',
     gap: 12,
@@ -319,7 +431,6 @@ const styles = StyleSheet.create({
   halfWidth: {
     flex: 1,
   },
-  // Action Buttons
   modalActions: {
     marginTop: 20,
   },

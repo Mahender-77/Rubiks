@@ -1,10 +1,23 @@
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { body, validationResult } from 'express-validator';
 import Profile from '../models/Profile';
 import User from '../models/User';
 import { authenticateToken } from '../middleware/authMiddleware';
 
 const router = express.Router();
+
+// Validation middleware for Express 5
+const handleValidationErrors = (req: Request, res: Response, next: NextFunction) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      message: 'Validation error',
+      errors: errors.array()
+    });
+  }
+  next();
+};
 
 // Build user response shape expected by the app (User + nested Profile)
 const buildUserResponse = async (userId: string) => {
@@ -51,11 +64,17 @@ const getOrCreateProfile = async (userId: string) => {
 
 // ----------- Get Profile -----------
 
-router.get('/', authenticateToken, async (req: Request, res: Response) => {
+router.get('/', authenticateToken, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!req.user || !req.user.userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
+    if (!req.user || !req.user.userId) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+    
     const user = await buildUserResponse(req.user.userId);
-    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
     res.json({ success: true, user });
   } catch (error) {
     console.error('Get profile error:', error);
@@ -65,21 +84,22 @@ router.get('/', authenticateToken, async (req: Request, res: Response) => {
 
 // ----------- Update Avatar -----------
 
-router.put(
-  '/avatar',
+router.put('/avatar',
   authenticateToken,
-  body('avatar').notEmpty().withMessage('Avatar data is required'),
-  async (req: Request, res: Response) => {
+  [
+    body('avatar').notEmpty().withMessage('Avatar data is required'),
+    handleValidationErrors
+  ],
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!req.user || !req.user.userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
-
-      const errors = validationResult(req);
-      if (!errors.isEmpty())
-        return res.status(400).json({ success: false, message: errors.array()[0].msg });
+      if (!req.user || !req.user.userId) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+      }
 
       const { avatar } = req.body;
-      if (!avatar.startsWith('data:image/'))
+      if (!avatar.startsWith('data:image/')) {
         return res.status(400).json({ success: false, message: 'Invalid image format' });
+      }
 
       const profile = await getOrCreateProfile(req.user.userId);
       profile.avatar = avatar;
@@ -96,19 +116,19 @@ router.put(
 
 // ----------- Update Basic Info -----------
 
-router.put(
-  '/basic',
+router.put('/basic',
   authenticateToken,
-  body('headline').optional().trim().isLength({ max: 200 }),
-  body('location').optional().trim(),
-  body('bio').optional().trim().isLength({ max: 1000 }),
-  async (req: Request, res: Response) => {
+  [
+    body('headline').optional().trim().isLength({ max: 200 }),
+    body('location').optional().trim(),
+    body('bio').optional().trim().isLength({ max: 1000 }),
+    handleValidationErrors
+  ],
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!req.user || !req.user.userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
-
-      const errors = validationResult(req);
-      if (!errors.isEmpty())
-        return res.status(400).json({ success: false, message: errors.array()[0].msg });
+      if (!req.user || !req.user.userId) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+      }
 
       const { headline, location, bio, skills, experience, education } = req.body;
       const profile = await getOrCreateProfile(req.user.userId);
@@ -132,27 +152,30 @@ router.put(
 
 // ----------- Update Contact & Social Links -----------
 
-router.put(
-  '/contact',
+router.put('/contact',
   authenticateToken,
-  body('name').optional().trim(),
-  body('phone').optional().trim(),
-  body('headline').optional().trim().isLength({ max: 200 }),
-  body('location').optional().trim(),
-  body('url').optional().trim().isURL().withMessage('URL must be a valid URL'),
-  async (req: Request, res: Response) => {
+  [
+    body('name').optional().trim(),
+    body('phone').optional().trim(),
+    body('headline').optional().trim().isLength({ max: 200 }),
+    body('location').optional().trim(),
+    body('url').optional().trim().isURL().withMessage('URL must be a valid URL'),
+    handleValidationErrors
+  ],
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!req.user || !req.user.userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
-
-      const errors = validationResult(req);
-      if (!errors.isEmpty())
-        return res.status(400).json({ success: false, message: errors.array()[0].msg });
+      if (!req.user || !req.user.userId) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+      }
 
       const { name, phone, headline, location, url, socialLinks } = req.body;
 
       // Update user details
       const userDoc = await User.findById(req.user.userId);
-      if (!userDoc) return res.status(404).json({ success: false, message: 'User not found' });
+      if (!userDoc) {
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+      
       if (name !== undefined) userDoc.name = name;
       if (phone !== undefined) userDoc.phone = phone;
       await userDoc.save();
@@ -176,17 +199,17 @@ router.put(
 
 // ----------- Update Skills -----------
 
-router.put(
-  '/skills',
+router.put('/skills',
   authenticateToken,
-  body('skills').isArray().withMessage('Skills must be an array'),
-  async (req: Request, res: Response) => {
+  [
+    body('skills').isArray().withMessage('Skills must be an array'),
+    handleValidationErrors
+  ],
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!req.user || !req.user.userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
-
-      const errors = validationResult(req);
-      if (!errors.isEmpty())
-        return res.status(400).json({ success: false, message: errors.array()[0].msg });
+      if (!req.user || !req.user.userId) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+      }
 
       const { skills } = req.body;
       const profile = await getOrCreateProfile(req.user.userId);
@@ -204,23 +227,23 @@ router.put(
 
 // ----------- Add Education -----------
 
-router.post(
-  '/education',
+router.post('/education',
   authenticateToken,
-  body('institution').notEmpty().withMessage('Institution is required'),
-  body('degree').notEmpty().withMessage('Degree is required'),
-  body('field').notEmpty().withMessage('Field is required'),
-  body('startDate').notEmpty().withMessage('Start date is required'),
-  async (req: Request, res: Response) => {
+  [
+    body('institution').notEmpty().withMessage('Institution is required'),
+    body('degree').notEmpty().withMessage('Degree is required'),
+    body('field').notEmpty().withMessage('Field is required'),
+    body('startDate').notEmpty().withMessage('Start date is required'),
+    handleValidationErrors
+  ],
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!req.user || !req.user.userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
-
-      const errors = validationResult(req);
-      if (!errors.isEmpty())
-        return res.status(400).json({ success: false, message: errors.array()[0].msg });
+      if (!req.user || !req.user.userId) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+      }
 
       const profile = await getOrCreateProfile(req.user.userId);
-      profile.education = [ ...(profile.education ?? []), req.body ];
+      profile.education = [...(profile.education ?? []), req.body];
       await profile.save();
 
       const user = await buildUserResponse(req.user.userId);
@@ -234,23 +257,23 @@ router.post(
 
 // ----------- Add Experience -----------
 
-router.post(
-  '/experience',
+router.post('/experience',
   authenticateToken,
-  body('title').notEmpty().withMessage('Title is required'),
-  body('company').notEmpty().withMessage('Company is required'),
-  body('startDate').notEmpty().withMessage('Start date is required'),
-  body('description').notEmpty().withMessage('Description is required'),
-  async (req: Request, res: Response) => {
+  [
+    body('title').notEmpty().withMessage('Title is required'),
+    body('company').notEmpty().withMessage('Company is required'),
+    body('startDate').notEmpty().withMessage('Start date is required'),
+    body('description').notEmpty().withMessage('Description is required'),
+    handleValidationErrors
+  ],
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (!req.user || !req.user.userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
-
-      const errors = validationResult(req);
-      if (!errors.isEmpty())
-        return res.status(400).json({ success: false, message: errors.array()[0].msg });
+      if (!req.user || !req.user.userId) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+      }
 
       const profile = await getOrCreateProfile(req.user.userId);
-      profile.experience = [ ...(profile.experience ?? []), req.body ];
+      profile.experience = [...(profile.experience ?? []), req.body];
       await profile.save();
 
       const user = await buildUserResponse(req.user.userId);

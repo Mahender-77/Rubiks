@@ -1,70 +1,43 @@
-import dotenv from 'dotenv';
-import express from 'express';
-import mongoose from 'mongoose';
-import cors from 'cors';
-import authRoutes from './routes/auth';
-import profileRoutes from './routes/profile';
-import adminRoutes from './routes/admin'; // Import admin routes
-import {Response , Request ,NextFunction} from 'express';
+import dotenv from "dotenv";
+import express from "express";
+import cors from "cors";
+import mongoose from "mongoose";
 
-// Load env from server/config.env
-dotenv.config({ path: './config.env' });
+dotenv.config({ path: "./config.env" });
 
 const app = express();
+const mongo_url = process.env.MONGODB_URI;
 
-// Middleware
 app.use(cors());
-// Increase body size limits to handle base64 images
-app.use(express.json({ limit: '15mb' }));
-app.use(express.urlencoded({ extended: true, limit: '15mb' }));
+app.use(express.json());
 
-// Connect to MongoDB
-if (!process.env.MONGODB_URI) {
-  throw new Error('❌ MONGODB_URI is not set in environment variables');
-}
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log('✅ Connected to MongoDB');
-  })
-  .catch((error) => {
-    console.error('❌ MongoDB connection error:', error);
-  });
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/profile', profileRoutes);
-app.use('/api/admin', adminRoutes);
+// ✅ MongoDB connection
+mongoose.connect(mongo_url!)
+.then(() => console.log("✅ MongoDB connected successfully"))
+.catch((err) => console.error("❌ MongoDB connection error:", err));
 
 // Health check
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    success: true, 
-    message: 'Rubiks API is running',
-    timestamp: new Date().toISOString()
-  });
+app.get("/api/health", (req, res) => {
+  res.json({ success: true, message: "Server working" });
 });
 
-// Error handling middleware
-app.use((err: unknown, req: Request, res: Response, next: NextFunction) => {
-  console.error('Server error:', err);
-  res.status(500).json({
-    success: false,
-    message: 'Internal server error'
-  });
-});
+// Test ONE route file at a time by uncommenting:
 
-// 404 handler
-app.use('*', (req: Request, res: Response) => {
-  res.status(404).json({
-    success: false,
-    message: 'Route not found'
-  });
-});
+// Test 1: Admin routes only
+import adminRoutes from "./routes/admin";
+app.use("/api/admin", adminRoutes);
 
-const PORT = process.env.PORT || 5001;
+// Test 2: Auth routes only (comment out admin first)
+import authRoutes from "./routes/auth";
+app.use("/api/auth", authRoutes);
 
-app.listen(PORT, () => {
-  console.log(`🚀 Rubiks server running on port ${PORT}`);
-  console.log(`📧 Email service: ${process.env.EMAIL_SERVICE}`);
-  console.log(`🗄️  Database: ${process.env.MONGODB_URI}`);
+// Test 3: Profile routes only (comment out others first)
+import profileRoutes from "./routes/profile";
+app.use("/api/profile", profileRoutes);
+
+const PORT = parseInt(process.env.PORT || "5001", 10);
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log("✅ Route test successful!");
 });
