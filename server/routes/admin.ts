@@ -1,4 +1,5 @@
 import express from "express";
+
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import {
   createJob,
@@ -6,8 +7,11 @@ import {
   getJobById,
   getJobs,
   updateJob,
+  createNews,
+  getNews
 } from "../controllers/adminController.js";
 import { param, validationResult } from "express-validator";
+
 
 const router = express.Router();
 
@@ -30,6 +34,7 @@ const handleValidationErrors = (
 
 // Public routes
 router.get("/getJobs", getJobs);
+router.get("/getNews",getNews);
 
 router.get(
   "/job/:id",
@@ -41,7 +46,22 @@ router.get(
 );
 
 // Protected routes (Admin only - verified inside controller)
-router.post("/jobs", authenticateToken, createJob);
+router.post("/jobs", authenticateToken,requireAdmin, createJob);
+
+
+router.put("/updateJob/:id", [
+  param('id').notEmpty().withMessage('Job ID is required'),
+  handleValidationErrors
+], authenticateToken,requireAdmin,updateJob);
+
+router.delete("/deletejob/:id", [
+  param('id').notEmpty().withMessage('Job ID is required'),
+  handleValidationErrors
+], authenticateToken,requireAdmin, deleteJob);
+
+//new routes
+
+router.post("/createNews",authenticateToken,requireAdmin,createNews)
 
 router.put(
   "/updateJob/:id",
@@ -62,5 +82,6 @@ router.delete(
   authenticateToken,
   deleteJob
 );
+
 
 export default router;

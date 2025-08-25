@@ -1,5 +1,9 @@
 import { Request, Response, NextFunction } from "express";
+
+
+import News from "../models/News";
 import Jobs from "../models/Jobs.js";
+
 
 export const createJob = async (
   req: Request,
@@ -126,3 +130,40 @@ export const deleteJob = async (
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+
+
+//..........................news.........................................
+
+export const createNews = async (req: Request, res: Response, next: NextFunction) => {
+  console.log("Creating news with data:", req.body);
+  try {
+    // Check admin
+    if (req.user?.user?.role !== "admin") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Admin access required" });
+    }   
+    // Create news item
+    const news = new News(req.body);
+    await news.save();
+    res.status(201).json({ success: true, news });
+  } catch (error: any) {    
+    console.error("Create news error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }       
+};
+
+export const getNews = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const news = await News.find().sort({ createdAt: -1 });
+    res.json({ success: true, news });
+  } catch (error: any) {
+    console.error("Get news error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Note: The createNews function assumes that the Jobs model is used for news as well.
+// If you have a separate News model, replace Jobs with News in the above code.
+

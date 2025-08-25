@@ -12,7 +12,7 @@ export default function ErrorScreen() {
     if (user) {
       router.replace('/(tabs)');
     } else {
-      router.replace('/auth/login');
+      router.replace('/(auth)/login');
     }
   };
 
