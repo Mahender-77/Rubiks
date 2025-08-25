@@ -6,6 +6,11 @@ import {
   Trash2,
   X,
   Save,
+  Calendar,
+  Eye,
+  Tag,
+  User,
+  Globe,
 } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import {
@@ -18,18 +23,45 @@ import {
   Modal,
   Alert,
   Dimensions,
+  Image,
+  Animated,
+  LayoutAnimation,
+  Platform,
+  UIManager,
 } from 'react-native';
 import { createNews, getNews } from '../../utils/api';
+import { LinearGradient } from 'expo-linear-gradient'; // You'll need to install this: expo install expo-linear-gradient
 
 const { width: screenWidth } = Dimensions.get('window');
 
-interface NewsItem {
-  id: number;
-  title: string;
-  views: number;
-  isActive: boolean;
-  description: string;
+// Enable LayoutAnimation on Android
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
 }
+
+interface NewsItem {
+  _id: string;
+  title: string;
+  description: string;
+  content: string;
+  image: string;
+  category: string;
+  author: {
+    name: string;
+    email: string;
+  };
+  publishedDate: string;
+  isActive: boolean;
+  views: number;
+  tags: string[];
+  source: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 const categories = [
   'technology',
   'sports',
@@ -47,9 +79,8 @@ export default function News() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newsList, setNewsList] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchNews = async () => {
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  const fetchNews = async () => {
       try {
         setLoading(true);
         const data = await getNews();
@@ -61,14 +92,17 @@ export default function News() {
         }
       } catch (error) {
         console.error('❌ Error fetching news:', error);
-        setNewsList([]); // fallback
+        setNewsList([]);
       } finally {
         setLoading(false);
       }
     };
 
+  useEffect(() => {
     fetchNews();
   }, []);
+
+
 
   // Form state
   const [formData, setFormData] = useState({
@@ -147,7 +181,6 @@ export default function News() {
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
-    // Prepare data for submission
     const newsData = {
       ...formData,
       author: {
@@ -162,7 +195,6 @@ export default function News() {
       views: 0,
     };
 
-    // Here you would typically send the data to your backend
     const response = await createNews(newsData);
 
     if (!response) {
@@ -178,6 +210,7 @@ export default function News() {
         },
       },
     ]);
+     fetchNews();
   };
 
   const closeModal = () => {
@@ -196,6 +229,53 @@ export default function News() {
         },
       ]
     );
+  };
+
+  const toggleCardExpansion = (cardId: string) => {
+    LayoutAnimation.configureNext({
+      duration: 300,
+      create: {
+        type: LayoutAnimation.Types.easeInEaseOut,
+        property: LayoutAnimation.Properties.opacity,
+      },
+      update: {
+        type: LayoutAnimation.Types.easeInEaseOut,
+      },
+    });
+
+    setExpandedCards((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(cardId)) {
+        newSet.delete(cardId);
+      } else {
+        newSet.add(cardId);
+      }
+      return newSet;
+    });
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const getCategoryColor = (category: string) => {
+    const colors = {
+      technology: '#3B82F6',
+      sports: '#EF4444',
+      politics: '#8B5CF6',
+      entertainment: '#F59E0B',
+      business: '#10B981',
+      health: '#06B6D4',
+      science: '#6366F1',
+      world: '#84CC16',
+      other: '#6B7280',
+    };
+    return colors[category] || colors.other;
   };
 
   return (
@@ -223,55 +303,195 @@ export default function News() {
         </View>
 
         <View style={styles.newsGrid}>
-          {newsList.map((news) => (
-            <View key={news.id} style={styles.newsCard}>
-              <View style={styles.newsCardHeader}>
-                <Text style={styles.newsCardTitle}>{news.title}</Text>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    gap: 8,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}
-                >
-                  <TouchableOpacity>
-                    <Edit3 color="#87CEEB" size={16} />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.deleteButton}>
-                    <Trash2 color="#ff4757" size={16} />
-                  </TouchableOpacity>
-                </View>
-              </View>
-              <View style={styles.newsCardMeta}>
-                <Text style={styles.newsCardDate}>{news.description}</Text>
-              </View>
-              <View style={styles.newsCardFooter}>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    {
-                      backgroundColor:
-                        news.isActive ? '#E8F5E8' : '#FFF3E0',
-                    },
-                  ]}
-                >
-                  <Text
+          {newsList.filter((news) =>news.title.toLowerCase().includes(searchQuery.toLowerCase()))
+          .map((news) => {
+            const isExpanded = expandedCards.has(news._id);
+
+            return (
+              <TouchableOpacity
+                key={news._id}
+                style={[styles.newsCard, isExpanded && styles.newsCardExpanded]}
+                onPress={() => toggleCardExpansion(news._id)}
+                activeOpacity={0.9}
+              >
+                {/* Image with Overlay and Action Icons */}
+                <View style={styles.imageContainer}>
+                  {news.image ? (
+                    <Image
+                      source={{ uri: news.image }}
+                      style={styles.newsImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={[styles.newsImage, styles.noImagePlaceholder]}>
+                      <Text style={styles.noImageText}>No Image</Text>
+                    </View>
+                  )}
+
+                  {/* Gradient Overlay */}
+                  <LinearGradient
+                    colors={[
+                      'transparent',
+                      'rgba(255,255,255,0.4)',
+                      'rgba(255,255,255,0.8)',
+                      '#FFFFFF',
+                    ]}
+                    style={styles.gradientOverlay}
+                  />
+
+                  {/* Title Overlay */}
+                  <View style={styles.titleOverlay}>
+                    <Text
+                      style={styles.overlayTitle}
+                      numberOfLines={isExpanded ? undefined : 2}
+                    >
+                      {news.title}
+                    </Text>
+                  </View>
+
+                  {/* Action Icons */}
+                  <View style={styles.actionIcons}>
+                    <TouchableOpacity
+                      style={styles.actionButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        // Handle edit action
+                      }}
+                    >
+                      <Edit3 color="#fff" size={18} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.actionButton, styles.deleteActionButton]}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        // Handle delete action
+                      }}
+                    >
+                      <Trash2 color="#fff" size={18} />
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Category Badge */}
+                  <View
                     style={[
-                      styles.statusText,
-                      {
-                        color:
-                          news.isActive ? '#388E3C' : '#F57C00',
-                      },
+                      styles.categoryBadge,
+                      { backgroundColor: getCategoryColor(news.category) },
                     ]}
                   >
-                    {news.isActive ? 'Active' : 'Inactive'}
-                  </Text>
+                    <Text style={styles.categoryBadgeText}>
+                      {news.category.charAt(0).toUpperCase() +
+                        news.category.slice(1)}
+                    </Text>
+                  </View>
                 </View>
-                <Text style={styles.newsCardViews}>{news.views} views</Text>
-              </View>
-            </View>
-          ))}
+
+                {/* Card Content */}
+                <View style={styles.cardContent}>
+                  {/* Basic Info */}
+                  <View style={styles.basicInfo}>
+                    <View style={styles.metaRow}>
+                      <User color="#6c757d" size={14} />
+                      <Text style={styles.metaText}>
+                        {news.author?.name || 'Unknown Author'}
+                      </Text>
+                    </View>
+                    <View style={styles.metaRow}>
+                      <Calendar color="#6c757d" size={14} />
+                      <Text style={styles.metaText}>
+                        {formatDate(news.publishedDate)}
+                      </Text>
+                    </View>
+                    <View style={styles.metaRow}>
+                      <Eye color="#6c757d" size={14} />
+                      <Text style={styles.metaText}>{news.views} views</Text>
+                    </View>
+                  </View>
+
+                  {/* Description */}
+                  <Text
+                    style={styles.newsDescription}
+                    numberOfLines={isExpanded ? undefined : 3}
+                  >
+                    {news.description}
+                  </Text>
+
+                  {/* Status Badge */}
+                  <View style={styles.statusContainer}>
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        {
+                          backgroundColor: news.isActive
+                            ? '#E8F5E8'
+                            : '#FFF3E0',
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.statusText,
+                          {
+                            color: news.isActive ? '#388E3C' : '#F57C00',
+                          },
+                        ]}
+                      >
+                        {news.isActive ? 'Active' : 'Inactive'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Expanded Content */}
+                  {isExpanded && (
+                    <View style={styles.expandedContent}>
+                      {/* Full Content */}
+                      <View style={styles.expandedSection}>
+                        <Text style={styles.sectionTitle}>Full Content</Text>
+                        <Text style={styles.fullContent}>{news.content}</Text>
+                      </View>
+
+                      {/* Tags */}
+                      {news.tags && news.tags.length > 0 && (
+                        <View style={styles.expandedSection}>
+                          <View style={styles.sectionHeader}>
+                            <Tag color="#6c757d" size={16} />
+                            <Text style={styles.sectionTitle}>Tags</Text>
+                          </View>
+                          <View style={styles.tagsContainer}>
+                            {news.tags.map((tag, index) => (
+                              <View key={index} style={styles.tagChip}>
+                                <Text style={styles.tagText}>{tag}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      )}
+
+                      {/* Source */}
+                      {news.source && (
+                        <View style={styles.expandedSection}>
+                          <View style={styles.sectionHeader}>
+                            <Globe color="#6c757d" size={16} />
+                            <Text style={styles.sectionTitle}>Source</Text>
+                          </View>
+                          <Text style={styles.sourceText}>{news.source}</Text>
+                        </View>
+                      )}
+
+                      {/* Author Email */}
+                      {news.author?.email && (
+                        <View style={styles.expandedSection}>
+                          <Text style={styles.sectionTitle}>Author Email</Text>
+                          <Text style={styles.emailText}>
+                            {news.author.email}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </View>
 
@@ -420,7 +640,12 @@ export default function News() {
 }
 
 const styles = StyleSheet.create({
-  content: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    backgroundColor: '#f8f9fa',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -437,6 +662,11 @@ const styles = StyleSheet.create({
     marginRight: 12,
     borderWidth: 1,
     borderColor: '#e9ecef',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   searchInput: {
     flex: 1,
@@ -449,68 +679,209 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#e9ecef',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   addButton: {
     backgroundColor: '#87CEEB',
     padding: 12,
     borderRadius: 12,
+    shadowColor: '#87CEEB',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   newsGrid: {
     gap: 16,
-    padding: 8,
   },
+
+  // Enhanced News Card Styles
   newsCard: {
     backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-  },
-  newsCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
     marginBottom: 8,
   },
-  newsCardTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    flex: 1,
+  newsCardExpanded: {
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 12,
   },
-  newsCardMeta: {
+
+  // Image Container Styles
+  imageContainer: {
+    position: 'relative',
+    height: 160,
+  },
+  newsImage: {
+    width: '100%',
+    height: '100%',
+  },
+  noImagePlaceholder: {
+    backgroundColor: '#f1f3f4',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noImageText: {
+    color: '#6c757d',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  gradientOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '75%',
+  },
+
+  // Action Icons Styles
+  actionIcons: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  actionButton: {
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: 8,
+    borderRadius: 20,
+  },
+  deleteActionButton: {
+    backgroundColor: 'rgba(255,71,87,0.8)',
+  },
+
+  // Category Badge
+  categoryBadge: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  categoryBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+
+  // Card Content Styles
+  cardContent: {
+    padding: 16,
+    paddingTop: 12,
+  },
+  // Basic Info Styles
+  basicInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 12,
+    flexWrap: 'wrap',
+    gap: 8,
   },
-  newsCardDate: {
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  metaText: {
     fontSize: 12,
     color: '#6c757d',
+    fontWeight: '500',
   },
-  newsCardViews: {
-    fontSize: 12,
-    color: '#87CEEB',
+
+  // Description
+  newsDescription: {
+    fontSize: 14,
+    color: '#4a5568',
+    lineHeight: 20,
+    marginBottom: 12,
   },
-  newsCardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+
+  // Status Container
+  statusContainer: {
+    alignItems: 'flex-start',
+    marginBottom: 8,
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginBottom: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
   statusText: {
     fontSize: 12,
-    fontWeight: 'bold',
-  },
-  deleteButton: {
-    padding: 4,
+    fontWeight: '600',
   },
 
-  // Modal Styles
+  // Expanded Content Styles
+  expandedContent: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+  },
+  expandedSection: {
+    marginBottom: 16,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2d3748',
+  },
+  fullContent: {
+    fontSize: 14,
+    color: '#4a5568',
+    lineHeight: 22,
+  },
+
+  // Tags Styles
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  tagChip: {
+    backgroundColor: '#edf2f7',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  tagText: {
+    fontSize: 12,
+    color: '#4a5568',
+    fontWeight: '500',
+  },
+
+  // Source and Email Styles
+  sourceText: {
+    fontSize: 14,
+    color: '#4a5568',
+    fontStyle: 'italic',
+  },
+  emailText: {
+    fontSize: 14,
+    color: '#3182ce',
+  },
+
+  // Modal Styles (keeping existing)
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -532,7 +903,7 @@ const styles = StyleSheet.create({
     color: '#2c3e50',
   },
 
-  // Form Styles
+  // Form Styles (keeping existing)
   fieldLabel: {
     fontSize: 14,
     color: '#495057',
@@ -564,7 +935,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
-  // Action Buttons
+  // Action Buttons (keeping existing)
   modalActions: {
     marginTop: 20,
   },
@@ -617,5 +988,22 @@ const styles = StyleSheet.create({
   categoryChipTextSelected: {
     color: '#fff',
     fontWeight: '600',
+  },
+  // Title Overlay Styles
+  titleOverlay: {
+    position: 'absolute',
+    bottom: 12,
+    left: 16,
+    right: 16,
+    zIndex: 2,
+  },
+  overlayTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1a202c',
+    lineHeight: 24,
+    textShadowColor: 'rgba(255, 255, 255, 0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 });

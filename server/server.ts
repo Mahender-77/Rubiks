@@ -53,10 +53,10 @@ app.use("/api/auth", authRoutes);
 
 // Test 3: Profile routes only (comment out others first)
 
-import profileRoutes from "./routes/profile";
-import Jobs from "./models/Jobs";
-
 import profileRoutes from "./routes/profile.js";
+import Jobs from "./models/Jobs.js";
+
+
 
 app.use("/api/profile", profileRoutes);
 
