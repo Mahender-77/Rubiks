@@ -1,6 +1,6 @@
 import express from "express";
 
-import { authenticateToken } from "../middleware/authMiddleware.js";
+import { authenticateToken, requireAdmin } from "../middleware/authMiddleware.js";
 import {
   createJob,
   deleteJob,

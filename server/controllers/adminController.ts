@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 
 
-import News from "../models/News";
+import News from "../models/News.js";
 import Jobs from "../models/Jobs.js";
 
 
