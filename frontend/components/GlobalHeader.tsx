@@ -45,7 +45,7 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ title }) => {
       <View style={styles.rightSection}>
         <TouchableOpacity
           style={styles.profileButton}
-          onPress={handleProfilePress}
+          onPress={role === "admin" ?handlePress : handleProfilePress}
         >
           <View style={styles.profileContainer}>
             <Text style={styles.userName}>{user?.name || 'User'}</Text>

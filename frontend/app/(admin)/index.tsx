@@ -211,7 +211,7 @@ export default function AdminIndex() {
         style: 'destructive',
         onPress: () => {
           logout();
-          router.replace('/auth/login');
+          router.replace('/(auth)/login');
         },
       },
     ]);

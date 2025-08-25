@@ -3,7 +3,9 @@ import axios from 'axios';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+type ExtraConfig = {
+  API_URL?: string;
+};
 // Get base URL
 const getBaseUrl = () => {
   console.log('Fetching base URL...');
@@ -28,9 +30,12 @@ const getBaseUrl = () => {
   return `http://${host}:${defaultPort}/api`;
 };
 
+const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.107:5001/api';
+
 // Create axios instance
 const axiosInstance = axios.create({
-  baseURL: `http://192.168.1.102:5001/api`,
+  baseURL: API_BASE_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

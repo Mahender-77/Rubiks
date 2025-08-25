@@ -357,9 +357,7 @@ const handleEdit = (job: any) => {
       <Modal visible={showAddModal} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>{`${
-              editJob.length === 0 ? 'Edit' : 'Add New Job'
-            }`}</Text>
+            <Text style={styles.modalTitle}>Add New Job</Text>
 
             <ScrollView
               style={{ maxHeight: '80%' }}

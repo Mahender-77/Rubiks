@@ -105,7 +105,7 @@ export default function ProfileScreen() {
           style: 'destructive',
           onPress: () => {
             logout();
-            router.replace('/auth/login');
+            router.replace('/(auth)/login');
           },
         },
       ]

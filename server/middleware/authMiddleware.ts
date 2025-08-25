@@ -1,104 +1,73 @@
-import jwt from 'jsonwebtoken';
-import User from '../models/User'; // Assuming User model is defined in models/User.ts
-import { Request, Response, NextFunction } from 'express';
+import jwt from "jsonwebtoken";
+import User from "../models/User";
+import { Request, Response, NextFunction } from "express";
 
-// Extend Express Request interface to include 'user'
+// Extend Express Request interface
 declare global {
   namespace Express {
     interface Request {
       user?: {
         userId: string;
         email: string;
-        user: any;
+        user: any; // you can replace `any` with Document & IUser if you have the interface
       };
     }
   }
 }
 
+// ✅ Auth middleware
+export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
 
-  // Main authentication middleware
-  export const authenticateToken=  async (req : Request, res: Response, next : NextFunction) => {
-    try {
-      // Get token from header
-      const authHeader = req.headers['authorization'];
-      const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
-
-      if (!token) {
-        return res.status(401).json({
-          success: false,
-          message: 'Access token is required'
-        });
-      }
-
-      // Verify token
-      const jwtSecret = process.env.JWT_SECRET;
-      if (!jwtSecret) {
-        return res.status(500).json({
-          success: false,
-          message: 'JWT secret is not configured'
-        });
-      }
-      const decoded = jwt.verify(token, jwtSecret) as { userId: string; email: string };
-
-      // Check if user still exists
-      const user = await User.findById(decoded.userId).select('-password');
-      if (!user) {
-        return res.status(401).json({
-          success: false,
-          message: 'User not found'
-        });
-      }
-
-      // Add user info to request object
-      req.user = {
-        userId: decoded.userId,
-        email: decoded.email,
-        user: user
-      };
-
-      next();
-    } catch (error) {
-      if (typeof error === 'object' && error !== null && 'name' in error) {
-        if ((error as { name: string }).name === 'JsonWebTokenError') {
-          return res.status(401).json({
-            success: false,
-            message: 'Invalid token'
-          });
-        }
-        
-        if ((error as { name: string }).name === 'TokenExpiredError') {
-          return res.status(401).json({
-            success: false,
-            message: 'Token expired'
-          });
-        }
-      }
-
-      console.error('Auth middleware error:', error);
-      return res.status(500).json({
-        success: false,
-        message: 'Internal server error'
-      });
+    if (!token) {
+      return res.status(401).json({ success: false, message: "Access token is required" });
     }
+
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      return res.status(500).json({ success: false, message: "JWT secret not configured" });
+    }
+
+    const decoded = jwt.verify(token, jwtSecret) as { userId: string; email: string };
+    const user = await User.findById(decoded.userId).select("-password");
+
+    if (!user) {
+      return res.status(401).json({ success: false, message: "User not found" });
+    }
+
+    // ✅ Attach both decoded info + user doc
+    req.user = {
+      userId: decoded.userId,
+      email: decoded.email,
+      user: user,
+    };
+
+    next();
+  } catch (error) {
+    console.error("Auth middleware error:", error);
+    return res.status(401).json({ success: false, message: "Invalid or expired token" });
+  }
+};
+
+// ✅ Role middleware
+export const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
+  if (req.user?.user?.role !== "admin") {
+    return res.status(403).json({ success: false, message: "Forbidden: Admin access required" });
+  }
+  next();
+};
+
+// ✅ Optional email verification check
+export const requireEmailVerification = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user?.user) {
+    return res.status(401).json({ success: false, message: "Authentication required" });
   }
 
-  // Optional middleware to check if email is verified
-  export const requireEmailVerification=(req : Request, res: Response, next : NextFunction) => {
-    if (!req.user || !req.user.user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Authentication required'
-      });
-    }
+  if (!req.user.user.isEmailVerified) {
+    return res.status(403).json({ success: false, message: "Email not verified" });
+  }
 
-        if (!req.user.user.isEmailVerified) {
-          return res.status(403).json({
-            success: false,
-            message: 'Email not verified'
-          });
-        }
-    
-        next();
-      }
-    
-  
+  next();
+};

@@ -96,7 +96,7 @@ export default function RegisterScreen() {
         </Text>
         <TouchableOpacity
           style={styles.successButton}
-          onPress={() => router.push('/auth/login')}
+          onPress={() => router.push('/(auth)/login')}
         >
           <Text style={styles.successButtonText}>Go to Login</Text>
         </TouchableOpacity>
@@ -230,7 +230,7 @@ export default function RegisterScreen() {
 
         <TouchableOpacity
           style={styles.loginButton}
-          onPress={() => router.push('/auth/login')}
+          onPress={() => router.push('/(auth)/login')}
         >
           <Text style={styles.loginButtonText}>
             Already have an account?{' '}

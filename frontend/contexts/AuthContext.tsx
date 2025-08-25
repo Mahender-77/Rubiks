@@ -24,6 +24,10 @@ import {
   User,
 } from "../utils/api";
 
+import Constants from "expo-constants";
+
+
+
 // Types
 interface AuthContextType {
   user: User | null;
@@ -52,7 +56,9 @@ interface AuthContextType {
   // Utility
   refreshUser: () => Promise<void>;
 }
-
+type ExtraConfig = {
+  API_URL?: string;
+};
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = (): AuthContextType => {
@@ -173,37 +179,43 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // -------- Auth Methods --------
-  const login = async (email: string, password: string) => {
-    console.log("🔐 Attempting login for:", email);
-    
-    try {
-      const result = await apiLogin(email, password);
+const login = async (email: string, password: string) => {
+  console.log("🔐 Attempting login for:", email);
 
-      if (result.success && result.data?.token && result.data?.user) {
-        console.log("✅ Login successful for:", {
-          email: result.data.user.email,
-          role: result.data.user.role,
-          id: result.data.user.id
-        });
-        
-        const newToken = result.data.token;
-        const newUser = result.data.user;
-        
-        // Update state - API already stores in AsyncStorage
-        setToken(newToken);
-        setUser(newUser);
-        
-        console.log("🎯 Login process completed successfully");
-      } else {
-        console.log("❌ Login failed:", result.message || "Unknown error");
-      }
+  try {
+    const result = await apiLogin(email, password);
 
-      return result;
-    } catch (error) {
-      console.error("❌ Login error:", error);
-      return { success: false, message: "Login failed" };
+    if (result.success && result.data?.token && result.data?.user) {
+      console.log("✅ Login successful for:", {
+        email: result.data.user.email,
+        role: result.data.user.role,
+        id: result.data.user.id
+      });
+
+      const newToken = result.data.token;
+      const newUser = result.data.user;
+
+      setToken(newToken);
+      setUser(newUser);
+
+      console.log("🎯 Login process completed successfully");
+      return { success: true, message: "Login successful" };
+    } else {
+      console.log("❌ Login failed:", result.message || "Unknown error");
+      return { success: false, message: result.message || "Invalid email or password" };
     }
-  };
+  } catch (error: any) {
+    console.error("❌ Login error:", error);
+
+    // Extract backend error message if available
+    let errorMessage = "Login failed";
+    if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    }
+
+    return { success: false, message: errorMessage };
+  }
+};
 
   const logout = async () => {
     console.log("🚪 Starting logout process...");
