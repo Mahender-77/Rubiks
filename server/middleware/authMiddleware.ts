@@ -1,5 +1,7 @@
 import jwt from "jsonwebtoken";
-import User from "../models/User";
+
+import User from "../models/User.js"; // Assuming User model is defined in models/User.ts
+
 import { Request, Response, NextFunction } from "express";
 
 // Extend Express Request interface
@@ -14,6 +16,7 @@ declare global {
     }
   }
 }
+
 
 // ✅ Auth middleware
 export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
@@ -67,6 +70,7 @@ export const requireEmailVerification = (req: Request, res: Response, next: Next
 
   if (!req.user.user.isEmailVerified) {
     return res.status(403).json({ success: false, message: "Email not verified" });
+
   }
 
   next();

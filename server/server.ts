@@ -44,16 +44,20 @@ app.get("/test/route", async (req, res) => {
 // Test ONE route file at a time by uncommenting:
 
 // Test 1: Admin routes only
-import adminRoutes from "./routes/admin";
+import adminRoutes from "./routes/admin.js";
 app.use("/api/admin", adminRoutes);
 
 // Test 2: Auth routes only (comment out admin first)
-import authRoutes from "./routes/auth";
+import authRoutes from "./routes/auth.js";
 app.use("/api/auth", authRoutes);
 
 // Test 3: Profile routes only (comment out others first)
+
 import profileRoutes from "./routes/profile";
 import Jobs from "./models/Jobs";
+
+import profileRoutes from "./routes/profile.js";
+
 app.use("/api/profile", profileRoutes);
 
 const PORT = parseInt(process.env.PORT || "5001", 10);
