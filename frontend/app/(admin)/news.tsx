@@ -29,7 +29,7 @@ import {
   Platform,
   UIManager,
 } from 'react-native';
-import { createNews, getNews } from '../../utils/api';
+import { createNews, deleteNews, getNews } from '../../utils/api';
 import { LinearGradient } from 'expo-linear-gradient'; // You'll need to install this: expo install expo-linear-gradient
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -278,6 +278,17 @@ export default function News() {
     return colors[category] || colors.other;
   };
 
+  const handleDelete = async(newsId: string) => {
+    
+ const res = await deleteNews(newsId);
+    if (res) {
+      Alert.alert('Success', 'News article deleted successfully!');
+      fetchNews();
+    } else {
+      Alert.alert('Error', 'Failed to delete news article. Please try again.');
+    }
+  }
+
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       <View style={styles.content}>
@@ -355,7 +366,7 @@ export default function News() {
                       style={styles.actionButton}
                       onPress={(e) => {
                         e.stopPropagation();
-                        // Handle edit action
+                       
                       }}
                     >
                       <Edit3 color="#fff" size={18} />
@@ -364,7 +375,7 @@ export default function News() {
                       style={[styles.actionButton, styles.deleteActionButton]}
                       onPress={(e) => {
                         e.stopPropagation();
-                        // Handle delete action
+                        handleDelete(news._id);
                       }}
                     >
                       <Trash2 color="#fff" size={18} />

@@ -31,7 +31,7 @@ const getBaseUrl = () => {
 };
 
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.107:5001/api';
+  process.env.EXPO_PUBLIC_API_BASE_URL || 'http://192.168.1.104:5001/api';
 
 // Create axios instance
 const axiosInstance = axios.create({
