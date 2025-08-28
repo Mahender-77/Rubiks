@@ -278,6 +278,16 @@ export const getNews = async () => {
   }
 };
 
+export const deleteNews = async (id: string) => {
+  try {
+    const { data } = await axiosInstance.delete(`/admin/deletenews/${id}`);
+    return data.success;
+  } catch (error) {
+    console.error('❌ API: Delete news error:', error);
+    throw error;
+  }
+};
+
 // Utility Functions
 export const getStoredAuth = async () => {
   try {

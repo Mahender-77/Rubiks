@@ -1,9 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 
-
 import News from "../models/News.js";
 import Jobs from "../models/Jobs.js";
-
 
 export const createJob = async (
   req: Request,
@@ -131,11 +129,13 @@ export const deleteJob = async (
   }
 };
 
-
-
 //..........................news.........................................
 
-export const createNews = async (req: Request, res: Response, next: NextFunction) => {
+export const createNews = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   console.log("Creating news with data:", req.body);
   try {
     // Check admin
@@ -143,18 +143,22 @@ export const createNews = async (req: Request, res: Response, next: NextFunction
       return res
         .status(403)
         .json({ success: false, message: "Admin access required" });
-    }   
+    }
     // Create news item
     const news = new News(req.body);
     await news.save();
     res.status(201).json({ success: true, news });
-  } catch (error: any) {    
+  } catch (error: any) {
     console.error("Create news error:", error);
     res.status(500).json({ success: false, message: error.message });
-  }       
+  }
 };
 
-export const getNews = async (req: Request, res: Response, next: NextFunction) => {
+export const getNews = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const news = await News.find().sort({ createdAt: -1 });
     res.json({ success: true, news });
@@ -164,6 +168,32 @@ export const getNews = async (req: Request, res: Response, next: NextFunction) =
   }
 };
 
+export const deleteNews = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    if (req.user?.user?.role !== "admin") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Admin access required" });
+    }
+
+    const news = await News.findByIdAndDelete(req.params.id);
+
+    if (!news) {
+      return res
+        .status(404)
+        .json({ success: false, message: "News not found" });
+    }
+
+    res.json({ success: true, message: "News deleted successfully" });
+  } catch (error: any) {
+    console.error("Delete news error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // Note: The createNews function assumes that the Jobs model is used for news as well.
 // If you have a separate News model, replace Jobs with News in the above code.
-

@@ -8,7 +8,8 @@ import {
   getJobs,
   updateJob,
   createNews,
-  getNews
+  getNews,
+  deleteNews
 } from "../controllers/adminController.js";
 import { param, validationResult } from "express-validator";
 
@@ -79,9 +80,16 @@ router.delete(
     param("id").notEmpty().withMessage("Job ID is required"),
     handleValidationErrors,
   ],
-  authenticateToken,
+  authenticateToken,requireAdmin,
   deleteJob
 );
 
+router.delete(
+  "/deletenews/:id",
+  [
+    param("id").notEmpty().withMessage("News ID is required"),
+    handleValidationErrors,
+  ],  authenticateToken,requireAdmin,deleteNews
+)
 
 export default router;
