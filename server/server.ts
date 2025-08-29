@@ -21,7 +21,7 @@ mongoose.connect(mongo_url!)
 app.get("/api/health", (req, res) => {
   res.json({ success: true, message: "Server working" });
 });
-
+import Jobs from "./models/Jobs.js";
 // Test route to verify server is running
 app.get("/test/route", async (req, res) => {
   try {
@@ -54,7 +54,7 @@ app.use("/api/auth", authRoutes);
 // Test 3: Profile routes only (comment out others first)
 
 import profileRoutes from "./routes/profile.js";
-import Jobs from "./models/Jobs.js";
+
 
 
 

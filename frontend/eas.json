@@ -8,7 +8,7 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "API_BASE_URL": "http://localhost:3000"
+        "EXPO_PUBLIC_API_BASE_URL": "http://localhost:3000/api"
       }
     },
     "preview": {
@@ -17,7 +17,7 @@
       },
       "distribution": "internal",
       "env": {
-        "API_BASE_URL": "http://192.168.1.104:5001/api"
+        "EXPO_PUBLIC_API_BASE_URL": "http://145.223.21.150:5001/api"
       }
     },
     "production": {
@@ -26,7 +26,7 @@
       },
       "autoIncrement": true,
       "env": {
-        "API_BASE_URL": "http://192.168.1.104:5001/api"
+        "EXPO_PUBLIC_API_BASE_URL": "http://145.223.21.150:5001/api"
       }
     }
   },
