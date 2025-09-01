@@ -137,14 +137,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Load stored authentication on app start
   useEffect(() => {
     const initializeAuth = async () => {
-      console.log("🔄 Initializing authentication...");
       setIsLoading(true);
       
       try {
         const { token: storedToken, user: storedUser } = await getStoredAuth();
 
         if (storedToken && storedUser) {
-          console.log("✅ Authentication restored from storage");
           setToken(storedToken);
           setUser(storedUser);
         } else {
@@ -159,7 +157,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } finally {
         setAuthInitialized(true);
         setIsLoading(false);
-        console.log("✅ Authentication initialization completed");
       }
     };
 
@@ -180,7 +177,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // -------- Auth Methods --------
 const login = async (email: string, password: string) => {
-  console.log("🔐 Attempting login for:", email);
+
 
   try {
     const result = await apiLogin(email, password);
@@ -197,8 +194,6 @@ const login = async (email: string, password: string) => {
 
       setToken(newToken);
       setUser(newUser);
-
-      console.log("🎯 Login process completed successfully");
       return { success: true, message: "Login successful" };
     } else {
       console.log("❌ Login failed:", result.message || "Unknown error");

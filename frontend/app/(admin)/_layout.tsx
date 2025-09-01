@@ -8,36 +8,31 @@ import { useEffect } from "react";
 export default function AdminLayout() {
   const { isAuthenticated, isLoading, user } = useAuth();
 
-  useEffect(() => {
-    console.log("🔑 AdminLayout: Current state:", {
-      isLoading,
-      isAuthenticated,
-      hasUser: !!user,
-      userRole: user?.role,
-      userEmail: user?.email
-    });
-  }, [isLoading, isAuthenticated, user]);
+  // useEffect(() => {
+  //   console.log("🔑 AdminLayout: Current state:", {
+  //     isLoading,
+  //     isAuthenticated,
+  //     hasUser: !!user,
+  //     userRole: user?.role,
+  //     userEmail: user?.email
+  //   });
+  // }, [isLoading, isAuthenticated, user]);
 
   // Don't redirect while still loading
   if (isLoading) {
-    console.log("⏳ AdminLayout: Still loading, not redirecting yet");
     return null; // Let parent handle loading
   }
 
   // Redirect if not authenticated
   if (!isAuthenticated || !user) {
-    console.log("🔒 AdminLayout: Not authenticated, redirecting to login");
     return <Redirect href="/(auth)/login" />;
   }
 
   // Redirect non-admin users away from admin area
   const userRole = user.role?.toLowerCase().trim();
   if (userRole !== "admin") {
-    console.log("❌ AdminLayout: Non-admin user trying to access admin area, redirecting to user tabs");
     return <Redirect href="/(tabs)/home" />;
   }
-
-  console.log("✅ AdminLayout: Admin user authenticated, showing admin layout");
   return (
        <View style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
           {/* Global Header with profile click navigation */}

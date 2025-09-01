@@ -5,7 +5,6 @@ import {
   createJob,
   deleteJob,
   getJobById,
-  getJobs,
   updateJob,
   createNews,
   getNews,
@@ -34,7 +33,7 @@ const handleValidationErrors = (
 };
 
 // Public routes
-router.get("/getJobs", getJobs);
+
 router.get("/getNews",getNews);
 
 router.get(

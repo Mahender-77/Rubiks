@@ -42,7 +42,7 @@ const getApiBaseUrl = (): string => {
 };
 
 // const API_BASE_URL = getApiBaseUrl();
-const API_BASE_URL ='http://192.168.1.104:5001/api' ;
+const API_BASE_URL ='http://192.168.1.106:5001/api' ;
 
 console.log('Final API_BASE_URL:', API_BASE_URL);
 console.log('============================');
@@ -68,12 +68,6 @@ const getFullUrl = (config: InternalAxiosRequestConfig): string => {
 axiosInstance.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     const fullUrl = getFullUrl(config);
-    console.log('🚀 Making request:', {
-      method: config.method?.toUpperCase(),
-      url: fullUrl,
-      baseURL: config.baseURL
-    });
-
     try {
       const token = await AsyncStorage.getItem('authToken');
       if (token) {
@@ -81,7 +75,6 @@ axiosInstance.interceptors.request.use(
           config.headers = {} as any;
         }
         config.headers.Authorization = `Bearer ${token}`;
-        console.log('✅ Auth token added to request');
       } else {
         console.log('ℹ️ No auth token found');
       }
@@ -100,11 +93,6 @@ axiosInstance.interceptors.request.use(
 // Response interceptor
 axiosInstance.interceptors.response.use(
   (response) => {
-    console.log('✅ Response received:', {
-      status: response.status,
-      statusText: response.statusText,
-      url: getFullUrl(response.config)
-    });
     return response;
   },
   async (error) => {

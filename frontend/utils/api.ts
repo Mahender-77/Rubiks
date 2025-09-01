@@ -45,28 +45,16 @@ export interface Job {
 // Auth API Functions
 export const login = async (email: string, password: string) => {
   try {
-    console.log('🔐 API: Attempting login for:', email);
-
     const { data } = await axiosInstance.post('/auth/login', {
       email,
       password,
     });
-
-    console.log('📥 API: Login response received:', {
-      success: data.success,
-      hasToken: !!data.data?.token,
-      hasUser: !!data.data?.user,
-      userRole: data.data?.user?.role,
-    });
-
     if (data.success && data.data?.token && data.data?.user) {
       // Store auth data
       await AsyncStorage.multiSet([
         [TOKEN_KEY, data.data.token],
         [USER_KEY, JSON.stringify(data.data.user)],
       ]);
-
-      console.log('✅ API: Auth data stored successfully');
     }
 
     return data;
@@ -193,7 +181,7 @@ export const addJob = async (jobData: any) => {
 
 export const getJobs = async () => {
   try {
-    const { data } = await axiosInstance.get('/admin/getJobs');
+    const { data } = await axiosInstance.get('/job/getJobs');
     return data;
   } catch (error) {
     console.error('❌ API: Get jobs error:', error);
@@ -213,8 +201,6 @@ export const getJobDetails = async (jobId: string | null) => {
     if (data.success && data.job) {
       return data.job;
     }
-
-    console.warn('Get job details failed:', data.message);
     return null;
   } catch (error) {
     console.error('❌ API: Get job details error:', error);
@@ -257,6 +243,25 @@ export const deleteJob = async (jobId: string) => {
   }
 };
 
+export const jobFilter = async () => {
+  try {
+    const response = await axiosInstance.get('/job/jobfilters');
+    return response.data; // ✅ only return the data payload
+  } catch (error) {
+    console.error('Job filter fetch error:', error);
+    throw error;
+  }
+};
+
+export const fetchJobsAPI = async (params: URLSearchParams) => {
+  try {
+    const response = await axiosInstance.get(`/job/jobs?${params.toString()}`);
+    return response.data; // ✅ return backend response
+  } catch (error) {
+    console.error('Fetch jobs API error:', error);
+    throw error;
+  }
+};
 //..........................news.........................................
 export const createNews = async (newsData: any) => {
   try {

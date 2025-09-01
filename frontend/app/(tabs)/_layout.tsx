@@ -11,14 +11,14 @@ export default function TabLayout() {
   const router = useRouter();
    const { isAuthenticated, isLoading, user } = useAuth();
 
-  useEffect(() => {
-    console.log("👥 TabsLayout: Current state:", {
-      isLoading,
-      isAuthenticated,
-      hasUser: !!user,
-      userRole: user?.role
-    });
-  }, [isLoading, isAuthenticated, user]);
+  // useEffect(() => {
+  //   console.log("👥 TabsLayout: Current state:", {
+  //     isLoading,
+  //     isAuthenticated,
+  //     hasUser: !!user,
+  //     userRole: user?.role
+  //   });
+  // }, [isLoading, isAuthenticated, user]);
 
   // Don't redirect while still loading
   if (isLoading) {
@@ -35,11 +35,11 @@ export default function TabLayout() {
   // Redirect admin users away from user tabs
   const userRole = user.role?.toLowerCase().trim();
   if (userRole === "admin") {
-    console.log("🔑 TabsLayout: Admin user detected, redirecting to admin panel");
+  
     return <Redirect href="/(admin)" />;
   }
 
-  console.log("👥 TabsLayout: Showing user tabs for regular user");
+  
 
 
   return (
