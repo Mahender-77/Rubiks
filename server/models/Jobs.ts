@@ -1,17 +1,17 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+// TypeScript interface for Job
 export interface IJob extends Document {
   title: string;
   company: string;
   location: string;
   type: "full-time" | "part-time" | "contract" | "internship";
- salary: {
-  min: { type: Number, required: true },
-  max: { type: Number, required: true },
-  currency: { type: String, default: "USD" },
-  period: { type: String, enum: ["monthly", "yearly"], default: "yearly" }
-}
-
+  salary: {
+    min: number;   // ✅ should be number, not { type: Number }
+    max: number;
+    currency: string;
+    salaryType: "monthly" | "yearly"; // ✅ matches schema enum
+  };
   description: string;
   requirements: string[];
   responsibilities: string[];

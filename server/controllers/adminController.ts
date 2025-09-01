@@ -27,19 +27,7 @@ export const createJob = async (
   }
 };
 
-export const getJobs = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const jobs = await Jobs.find().sort({ createdAt: -1 });
-    res.json({ success: true, jobs });
-  } catch (error: any) {
-    console.error("Get jobs error:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
+
 
 export const getJobById = async (
   req: Request,

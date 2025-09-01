@@ -8,18 +8,17 @@ import { useEffect } from "react";
 function AppStack() {
   const { isLoading, isAuthenticated, user } = useAuth();
 
-  useEffect(() => {
-    console.log("🏗️ AppStack: Current state:", {
-      isLoading,
-      isAuthenticated,
-      hasUser: !!user,
-      userRole: user?.role
-    });
-  }, [isLoading, isAuthenticated, user]);
+  // useEffect(() => {
+  //   console.log("🏗️ AppStack: Current state:", {
+  //     isLoading,
+  //     isAuthenticated,
+  //     hasUser: !!user,
+  //     userRole: user?.role
+  //   });
+  // }, [isLoading, isAuthenticated, user]);
 
   // Show loading screen while authentication is being restored/initialized
   if (isLoading) {
-    console.log("⏳ AppStack: Showing loading screen");
     return (
       <View style={{ 
         flex: 1, 
@@ -46,8 +45,6 @@ function AppStack() {
       </View>
     );
   }
-
-  console.log("🏗️ AppStack: Rendering navigation stack");
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
@@ -100,7 +97,6 @@ function AppStack() {
 }
 
 export default function RootLayout() {
-  console.log("🚀 RootLayout: Starting app initialization...");
   
   return (
     <SafeAreaProvider>

@@ -16,7 +16,6 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ title }) => {
   const router = useRouter();
   const [role, setRole] = React.useState(user?.role || 'user');
 
-  console.log('User role:', role);
 
   const handlePress = () => {
     if (isLoading) return; // Prevent navigation if loading

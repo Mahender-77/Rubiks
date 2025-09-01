@@ -20,7 +20,6 @@ export default function Index() {
 
   // Show loading spinner while authentication is being initialized
   if (isLoading) {
-    console.log("⏳ Index: Showing loading screen...");
     return (
       <View style={{ 
         flex: 1, 
@@ -43,26 +42,15 @@ export default function Index() {
 
   // If not authenticated, redirect to login
   if (!isAuthenticated || !user || !token) {
-    console.log("🔒 Index: User not authenticated, redirecting to login");
     return <Redirect href="/(auth)/login" />;
   }
 
   // Get user role and normalize it
   const userRole = user.role?.toString().toLowerCase().trim();
-  
-  console.log("👤 Index: Routing authenticated user:", {
-    email: user.email,
-    originalRole: user.role,
-    normalizedRole: userRole,
-    userId: user.id
-  });
-
   // Route based on user role
   if (userRole === "admin") {
-    console.log("🔑 Index: Redirecting admin to admin panel");
     return <Redirect href="/(admin)" />;
   } else {
-    console.log("👥 Index: Redirecting user to tabs");
     return <Redirect href="/(tabs)/home" />;
   }
 }

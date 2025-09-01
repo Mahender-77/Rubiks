@@ -60,6 +60,10 @@ import profileRoutes from "./routes/profile.js";
 
 app.use("/api/profile", profileRoutes);
 
+import jobRoutes from "./routes/job.js"
+
+app.use("/api/job",jobRoutes)
+
 const PORT = parseInt(process.env.PORT || "5001", 10);
 
 app.listen(PORT, "0.0.0.0", () => {

@@ -34,6 +34,7 @@ export default function LoginScreen() {
     setIsLoading(true);
     try {
       const result = await login(email, password);
+      console.log("result",result)
       if (result.success) {
         Alert.alert('Success', result.message);
         router.replace('/home');
