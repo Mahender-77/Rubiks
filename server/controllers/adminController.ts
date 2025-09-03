@@ -27,8 +27,6 @@ export const createJob = async (
   }
 };
 
-
-
 export const getJobById = async (
   req: Request,
   res: Response,

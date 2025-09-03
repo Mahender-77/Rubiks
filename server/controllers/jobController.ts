@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import Jobs, { IJob } from "../models/Jobs.js";
 
-
 export const getJobs = async (
   req: Request,
   res: Response,
@@ -16,7 +15,6 @@ export const getJobs = async (
   }
 };
 
-
 // Explicitly type filter options
 interface FilterOptions {
   jobTypes: IJob["type"][];
@@ -29,15 +27,18 @@ interface FilterOptions {
 
 export const getJobFilters = async (req: Request, res: Response) => {
   try {
-    const jobs = await Jobs.find({}, {
-      type: 1,
-      experience: 1,
-      location: 1,
-      company: 1,
-      skills: 1,
-      'salary.min': 1,
-      'salary.max': 1
-    });
+    const jobs = await Jobs.find(
+      {},
+      {
+        type: 1,
+        experience: 1,
+        location: 1,
+        company: 1,
+        skills: 1,
+        "salary.min": 1,
+        "salary.max": 1,
+      }
+    );
 
     const filterOptions: FilterOptions = {
       jobTypes: [],
@@ -45,20 +46,23 @@ export const getJobFilters = async (req: Request, res: Response) => {
       locations: [],
       companies: [],
       skills: [],
-      salaryRange: { min: 0, max: 200000 }
+      salaryRange: { min: 0, max: 200000 },
     };
 
     let minSalary = Infinity;
     let maxSalary = 0;
 
-    jobs.forEach(job => {
+    jobs.forEach((job) => {
       // Job types
       if (job.type && !filterOptions.jobTypes.includes(job.type)) {
         filterOptions.jobTypes.push(job.type);
       }
 
       // Experience levels
-      if (job.experience && !filterOptions.experienceLevels.includes(job.experience)) {
+      if (
+        job.experience &&
+        !filterOptions.experienceLevels.includes(job.experience)
+      ) {
         filterOptions.experienceLevels.push(job.experience);
       }
 
@@ -74,7 +78,7 @@ export const getJobFilters = async (req: Request, res: Response) => {
 
       // Skills
       if (job.skills && Array.isArray(job.skills)) {
-        job.skills.forEach(skill => {
+        job.skills.forEach((skill) => {
           if (skill && !filterOptions.skills.includes(skill)) {
             filterOptions.skills.push(skill);
           }
@@ -98,21 +102,26 @@ export const getJobFilters = async (req: Request, res: Response) => {
 
     // Default values if empty
     if (filterOptions.jobTypes.length === 0) {
-      filterOptions.jobTypes = ['full-time', 'part-time', 'contract', 'internship'];
+      filterOptions.jobTypes = [
+        "full-time",
+        "part-time",
+        "contract",
+        "internship",
+      ];
     }
 
     if (filterOptions.experienceLevels.length === 0) {
-      filterOptions.experienceLevels = ['entry', 'mid', 'senior', 'lead'];
+      filterOptions.experienceLevels = ["entry", "mid", "senior", "lead"];
     }
 
     if (filterOptions.locations.length === 0) {
-      filterOptions.locations = ['Remote'];
+      filterOptions.locations = ["Remote"];
     }
 
     // Sort
     filterOptions.jobTypes.sort();
     filterOptions.experienceLevels.sort((a, b) => {
-      const order = ['entry', 'mid', 'senior', 'lead'];
+      const order = ["entry", "mid", "senior", "lead"];
       return order.indexOf(a) - order.indexOf(b);
     });
     filterOptions.locations.sort();
@@ -122,15 +131,14 @@ export const getJobFilters = async (req: Request, res: Response) => {
     res.status(200).json({
       success: true,
       message: "Filter options retrieved successfully",
-      filterOptions
+      filterOptions,
     });
-
   } catch (error: any) {
-    console.error('Get job filters error:', error);
+    console.error("Get job filters error:", error);
     res.status(500).json({
       success: false,
       message: "Failed to retrieve filter options",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -164,7 +172,9 @@ export const fetchJobsAPI = async (req: Request, res: Response) => {
     }
 
     if (req.query.experienceLevels) {
-      filters.experience = { $in: (req.query.experienceLevels as string).split(",") };
+      filters.experience = {
+        $in: (req.query.experienceLevels as string).split(","),
+      };
     }
 
     if (req.query.locations) {
@@ -172,8 +182,12 @@ export const fetchJobsAPI = async (req: Request, res: Response) => {
     }
 
     if (req.query.minSalary || req.query.maxSalary) {
-      filters["salary.min"] = { $gte: parseInt(req.query.minSalary as string) || 0 };
-      filters["salary.max"] = { $lte: parseInt(req.query.maxSalary as string) || 200000 };
+      filters["salary.min"] = {
+        $gte: parseInt(req.query.minSalary as string) || 0,
+      };
+      filters["salary.max"] = {
+        $lte: parseInt(req.query.maxSalary as string) || 200000,
+      };
     }
 
     // Query DB

@@ -1,6 +1,9 @@
 import express from "express";
 
-import { authenticateToken, requireAdmin } from "../middleware/authMiddleware.js";
+import {
+  authenticateToken,
+  requireAdmin,
+} from "../middleware/authMiddleware.js";
 import {
   createJob,
   deleteJob,
@@ -8,10 +11,9 @@ import {
   updateJob,
   createNews,
   getNews,
-  deleteNews
+  deleteNews,
 } from "../controllers/adminController.js";
 import { param, validationResult } from "express-validator";
-
 
 const router = express.Router();
 
@@ -34,7 +36,7 @@ const handleValidationErrors = (
 
 // Public routes
 
-router.get("/getNews",getNews);
+router.get("/getNews", getNews);
 
 router.get(
   "/job/:id",
@@ -46,22 +48,33 @@ router.get(
 );
 
 // Protected routes (Admin only - verified inside controller)
-router.post("/jobs", authenticateToken,requireAdmin, createJob);
+router.post("/jobs", authenticateToken, requireAdmin, createJob);
 
+router.put(
+  "/updateJob/:id",
+  [
+    param("id").notEmpty().withMessage("Job ID is required"),
+    handleValidationErrors,
+  ],
+  authenticateToken,
+  requireAdmin,
+  updateJob
+);
 
-router.put("/updateJob/:id", [
-  param('id').notEmpty().withMessage('Job ID is required'),
-  handleValidationErrors
-], authenticateToken,requireAdmin,updateJob);
-
-router.delete("/deletejob/:id", [
-  param('id').notEmpty().withMessage('Job ID is required'),
-  handleValidationErrors
-], authenticateToken,requireAdmin, deleteJob);
+router.delete(
+  "/deletejob/:id",
+  [
+    param("id").notEmpty().withMessage("Job ID is required"),
+    handleValidationErrors,
+  ],
+  authenticateToken,
+  requireAdmin,
+  deleteJob
+);
 
 //new routes
 
-router.post("/createNews",authenticateToken,requireAdmin,createNews)
+router.post("/createNews", authenticateToken, requireAdmin, createNews);
 
 router.put(
   "/updateJob/:id",
@@ -79,7 +92,8 @@ router.delete(
     param("id").notEmpty().withMessage("Job ID is required"),
     handleValidationErrors,
   ],
-  authenticateToken,requireAdmin,
+  authenticateToken,
+  requireAdmin,
   deleteJob
 );
 
@@ -88,7 +102,10 @@ router.delete(
   [
     param("id").notEmpty().withMessage("News ID is required"),
     handleValidationErrors,
-  ],  authenticateToken,requireAdmin,deleteNews
-)
+  ],
+  authenticateToken,
+  requireAdmin,
+  deleteNews
+);
 
 export default router;
