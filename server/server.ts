@@ -12,6 +12,7 @@ const mongo_url = process.env.MONGODB_URI;
 app.use(cors());
 app.use(express.json());
 
+console.log("Db",mongo_url)
 // ✅ MongoDB connection
 mongoose.connect(mongo_url!)
 .then(() => console.log("✅ MongoDB connected successfully"))

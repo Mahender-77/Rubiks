@@ -42,7 +42,7 @@ const getApiBaseUrl = (): string => {
 };
 
 // const API_BASE_URL = getApiBaseUrl();
-const API_BASE_URL ='http://192.168.1.106:5001/api' ;
+const API_BASE_URL ='http://192.168.1.108:5001/api' ;
 
 console.log('Final API_BASE_URL:', API_BASE_URL);
 console.log('============================');
