@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import Jobs, { IJob } from "../models/Jobs";
+import Jobs, { IJob } from "../models/Jobs.js";
 
 
 export const getJobs = async (
