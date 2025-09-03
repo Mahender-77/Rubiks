@@ -3,20 +3,19 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 
-
-dotenv.config({ path: "./config.env" });
+dotenv.config({ path: "./.env" });
 
 const app = express();
 const mongo_url = process.env.MONGODB_URI;
-
 app.use(cors());
 app.use(express.json());
 
-console.log("Db",mongo_url)
+console.log("Db", mongo_url);
 // ✅ MongoDB connection
-mongoose.connect(mongo_url!)
-.then(() => console.log("✅ MongoDB connected successfully"))
-.catch((err) => console.error("❌ MongoDB connection error:", err));
+mongoose
+  .connect(mongo_url!)
+  .then(() => console.log("✅ MongoDB connected successfully"))
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
 
 // Health check
 app.get("/api/health", (req, res) => {
@@ -56,14 +55,11 @@ app.use("/api/auth", authRoutes);
 
 import profileRoutes from "./routes/profile.js";
 
-
-
-
 app.use("/api/profile", profileRoutes);
 
-import jobRoutes from "./routes/job.js"
+import jobRoutes from "./routes/job.js";
 
-app.use("/api/job",jobRoutes)
+app.use("/api/job", jobRoutes);
 
 const PORT = parseInt(process.env.PORT || "5001", 10);
 
