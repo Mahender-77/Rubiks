@@ -1,0 +1,139 @@
+import News from "../models/News.js";
+import Jobs from "../models/Jobs.js";
+export const createJob = async (req, res, next) => {
+    console.log("Creating job with data:", req.body);
+    try {
+        // Check admin
+        if (req.user?.user?.role !== "admin") {
+            return res
+                .status(403)
+                .json({ success: false, message: "Admin access required" });
+        }
+        const job = new Jobs(req.body);
+        await job.save();
+        res.status(201).json({ success: true, job });
+    }
+    catch (error) {
+        console.error("Create job error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+export const getJobById = async (req, res, next) => {
+    try {
+        const job = await Jobs.findById(req.params.id);
+        if (!job) {
+            return res.status(404).json({ success: false, message: "Job not found" });
+        }
+        res.json({ success: true, job });
+    }
+    catch (error) {
+        console.error("Get job by ID error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+export const updateJob = async (req, res, next) => {
+    try {
+        // Check role
+        if (req.user?.user?.role !== "admin") {
+            return res
+                .status(403)
+                .json({ success: false, message: "Admin access required" });
+        }
+        // Extract job id from params
+        const { id } = req.params;
+        // Update job with request body
+        const job = await Jobs.findByIdAndUpdate(id, req.body, {
+            new: true,
+            runValidators: true,
+        });
+        if (!job) {
+            return res.status(404).json({ success: false, message: "Job not found" });
+        }
+        // Match frontend expectation
+        res.json({
+            success: true,
+            message: "Job updated successfully",
+            job,
+        });
+    }
+    catch (error) {
+        console.error("Update job error:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message || "Server error",
+        });
+    }
+};
+export const deleteJob = async (req, res, next) => {
+    console.log("Deleting job with ID:", req.params.id);
+    try {
+        if (req.user?.user?.role !== "admin") {
+            return res
+                .status(403)
+                .json({ success: false, message: "Admin access required" });
+        }
+        const job = await Jobs.findByIdAndDelete(req.params.id);
+        console.log("Job found for deletion:", job);
+        if (!job) {
+            return res.status(404).json({ success: false, message: "Job not found" });
+        }
+        console.log("Job deleted successfully:", job._id);
+        res.json({ success: true, message: "Job deleted successfully" });
+    }
+    catch (error) {
+        console.error("Delete job error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+//..........................news.........................................
+export const createNews = async (req, res, next) => {
+    console.log("Creating news with data:", req.body);
+    try {
+        // Check admin
+        if (req.user?.user?.role !== "admin") {
+            return res
+                .status(403)
+                .json({ success: false, message: "Admin access required" });
+        }
+        // Create news item
+        const news = new News(req.body);
+        await news.save();
+        res.status(201).json({ success: true, news });
+    }
+    catch (error) {
+        console.error("Create news error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+export const getNews = async (req, res, next) => {
+    try {
+        const news = await News.find().sort({ createdAt: -1 });
+        res.json({ success: true, news });
+    }
+    catch (error) {
+        console.error("Get news error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+export const deleteNews = async (req, res, next) => {
+    try {
+        if (req.user?.user?.role !== "admin") {
+            return res
+                .status(403)
+                .json({ success: false, message: "Admin access required" });
+        }
+        const news = await News.findByIdAndDelete(req.params.id);
+        if (!news) {
+            return res
+                .status(404)
+                .json({ success: false, message: "News not found" });
+        }
+        res.json({ success: true, message: "News deleted successfully" });
+    }
+    catch (error) {
+        console.error("Delete news error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+// Note: The createNews function assumes that the Jobs model is used for news as well.
+// If you have a separate News model, replace Jobs with News in the above code.
