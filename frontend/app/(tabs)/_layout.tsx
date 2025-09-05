@@ -1,5 +1,5 @@
 import { Redirect, Tabs, useRouter } from 'expo-router';
-import { Chrome as Home, FileText, Briefcase, TrendingUp, BarChart3 } from 'lucide-react-native';
+import { Home, FileText, Briefcase, TrendingUp, BarChart3 } from 'lucide-react-native';
 
 import { View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';

@@ -1,10 +1,12 @@
-// app/(tabs)/jobs.tsx - Fixed Enhanced Jobs Screen
+// app/(tabs)/jobs.tsx - Updated with Fixed Search & Pagination
 import { useRouter } from 'expo-router';
 import {
   Bookmark,
   Building,
   Check,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   IndianRupee,
   Filter,
@@ -17,7 +19,7 @@ import {
   Briefcase,
   AlertCircle,
 } from 'lucide-react-native';
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, JSX } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -31,7 +33,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { fetchJobsAPI, jobFilter } from '../../utils/api';
+import { fetchJobsAPI, jobFilter } from '../../../utils/api';
+
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -115,7 +118,7 @@ const CustomSlider: React.FC<{
   );
 };
 
-// Filter Modal Component
+// Filter Modal Component (keeping the same as before)
 const FilterModal: React.FC<{
   visible: boolean;
   onClose: () => void;
@@ -284,7 +287,7 @@ const FilterModal: React.FC<{
   );
 };
 
-// Sort Modal Component
+// Sort Modal Component (keeping the same as before)
 const SortModal: React.FC<{
   visible: boolean;
   onClose: () => void;
@@ -401,7 +404,7 @@ export default function JobsScreen() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Search & Filter States
@@ -418,10 +421,11 @@ export default function JobsScreen() {
     maxSalary: 200000,
   });
 
-  // Pagination States
+  // Pagination States (Changed from infinite scroll to pagination)
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalJobs, setTotalJobs] = useState(0);
+  const JOBS_PER_PAGE = 6; // Changed to 5 jobs per page
 
   // Sorting States
   const [sortBy, setSortBy] = useState('postedDate');
@@ -441,9 +445,7 @@ export default function JobsScreen() {
       setError(null);
 
       try {
-        // Fetch filter options first
         await fetchFilterOptions();
-        // Then fetch jobs
         await fetchJobs(true, 1);
       } catch (error) {
         console.error('Initialization error:', error);
@@ -456,18 +458,21 @@ export default function JobsScreen() {
     initialize();
   }, []);
 
-  // Handle search and filter changes with debounce
+  // Handle search with debounce (Fixed - no page reload)
   useEffect(() => {
-    // Skip if initial load hasn't completed
     if (!initialLoadRef.current) return;
 
-    // Clear existing timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
 
-    // Debounced search/filter
+    // Set search loading when user is typing
+    if (searchQuery.length > 0) {
+      setSearchLoading(true);
+    }
+
     searchTimeoutRef.current = setTimeout(() => {
+      setCurrentPage(1); // Reset to first page on search
       fetchJobs(true, 1);
     }, 500);
 
@@ -476,14 +481,20 @@ export default function JobsScreen() {
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [searchQuery, activeFilters, sortBy, sortOrder]);
+  }, [searchQuery]);
+
+  // Handle filter and sort changes
+  useEffect(() => {
+    if (!initialLoadRef.current) return;
+    setCurrentPage(1); // Reset to first page when filters change
+    fetchJobs(true, 1);
+  }, [activeFilters, sortBy, sortOrder]);
 
   const fetchFilterOptions = async () => {
     try {
       const data = await jobFilter();
       if (data.success) {
         setFilterOptions(data.filterOptions);
-        // Set initial salary range
         setActiveFilters((prev) => ({
           ...prev,
           minSalary: data.filterOptions.salaryRange.min,
@@ -492,7 +503,6 @@ export default function JobsScreen() {
       }
     } catch (error) {
       console.error('Fetch filter options error:', error);
-      // Set fallback filter options
       setFilterOptions({
         jobTypes: ['full-time', 'part-time', 'contract', 'internship'],
         experienceLevels: ['entry', 'mid', 'senior', 'lead'],
@@ -512,19 +522,15 @@ export default function JobsScreen() {
 
   const fetchJobs = async (reset = false, page = 1) => {
     try {
-      if (reset) {
-        setCurrentPage(1);
-        if (!loading) setLoading(true);
-      } else {
-        setLoadingMore(true);
+      if (reset && !loading) {
+        setSearchLoading(true);
       }
 
       setError(null);
 
-      // Build query parameters
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: '10',
+        limit: JOBS_PER_PAGE.toString(), // Changed to 5
         sortBy,
         sortOrder,
       });
@@ -547,26 +553,21 @@ export default function JobsScreen() {
       const data = await fetchJobsAPI(params);
 
       if (data.success) {
-        if (reset) {
-          setJobs(data.jobs || []);
-        } else {
-          setJobs((prev) => [...prev, ...(data.jobs || [])]);
-        }
-
-        setCurrentPage(data.pagination?.current || 1);
+        setJobs(data.jobs || []);
+        setCurrentPage(data.pagination?.current || page);
         setTotalPages(data.pagination?.pages || 1);
         setTotalJobs(data.pagination?.total || 0);
       } else {
         setError(data.message || 'Failed to fetch jobs');
-        if (reset) setJobs([]);
+        setJobs([]);
       }
     } catch (error) {
       console.error('Fetch jobs error:', error);
       setError('Network error occurred. Please check your connection.');
-      if (reset) setJobs([]);
+      setJobs([]);
     } finally {
       setLoading(false);
-      setLoadingMore(false);
+      setSearchLoading(false);
       setRefreshing(false);
     }
   };
@@ -574,14 +575,33 @@ export default function JobsScreen() {
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
     setError(null);
+    setCurrentPage(1);
     fetchJobs(true, 1);
   }, [searchQuery, activeFilters, sortBy, sortOrder]);
 
-  const handleLoadMore = useCallback(() => {
-    if (currentPage < totalPages && !loadingMore && !loading) {
-      fetchJobs(false, currentPage + 1);
+  // Pagination handlers
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      const newPage = currentPage - 1;
+      setCurrentPage(newPage);
+      fetchJobs(true, newPage);
     }
-  }, [currentPage, totalPages, loadingMore, loading]);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      const newPage = currentPage + 1;
+      setCurrentPage(newPage);
+      fetchJobs(true, newPage);
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page !== currentPage && page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      fetchJobs(true, page);
+    }
+  };
 
   const applyFilters = (newFilters: Filters) => {
     setActiveFilters(newFilters);
@@ -649,7 +669,7 @@ export default function JobsScreen() {
   const renderJobCard = ({ item }: { item: Job }) => (
     <TouchableOpacity
       style={styles.jobCard}
-      onPress={() => router.push(`/jobs/${item._id}`)}
+      onPress={() => router.push(`/jobs/${item._id}`)} // This will navigate to job details
     >
       <View style={styles.jobHeader}>
         <View style={styles.companyInfo}>
@@ -683,7 +703,6 @@ export default function JobsScreen() {
             <MapPin size={14} color="#6B7280" />
             <Text style={styles.detailText}>{item.location}</Text>
           </View>
-
           {item.salary && (
             <View
               style={{
@@ -693,8 +712,9 @@ export default function JobsScreen() {
                 justifyContent: 'flex-end',
               }}
             >
-              {/* <IndianRupee size={14} color="#6B7280" /> */}
-              <Text style={[styles.detailText, { flex: 0 }]}>{formatSalary(item.salary)}</Text>
+              <Text style={[styles.detailText, { flex: 0 }]}>
+                {formatSalary(item.salary)}
+              </Text>
             </View>
           )}
         </View>
@@ -704,7 +724,6 @@ export default function JobsScreen() {
             <Clock size={14} color="#6B7280" />
             <Text style={styles.detailText}>{formatDate(item.postedDate)}</Text>
           </View>
-
           <Text style={styles.applicationsText}>
             {item.applications} applications
           </Text>
@@ -726,12 +745,6 @@ export default function JobsScreen() {
         </View>
 
         <View style={styles.actionButtons}>
-          {/* <TouchableOpacity style={styles.actionButton}>
-            <Bookmark size={16} color="#6B7280" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
-            <Share size={16} color="#6B7280" />
-          </TouchableOpacity> */}
           <TouchableOpacity style={styles.applyButton}>
             <Text style={styles.applyText}>Apply</Text>
           </TouchableOpacity>
@@ -742,8 +755,9 @@ export default function JobsScreen() {
 
   const renderListHeader = () => (
     <View style={styles.listHeader}>
-      <Text style={styles.resultsText}>{totalJobs} jobs found</Text>
-
+      <Text style={styles.resultsText}>
+        {searchLoading ? 'Searching...' : `${totalJobs} jobs found`}
+      </Text>
       <TouchableOpacity
         style={styles.sortButton}
         onPress={() => setShowSortModal(true)}
@@ -755,16 +769,68 @@ export default function JobsScreen() {
     </View>
   );
 
-  const renderListFooter = () => {
-    if (!loadingMore) return null;
+  // New Pagination Component
+ const renderPagination = () => {
+  if (totalPages <= 1) return null;
 
-    return (
-      <View style={styles.loadingMore}>
-        <ActivityIndicator size="small" color="#3B82F6" />
-        <Text style={styles.loadingMoreText}>Loading more jobs...</Text>
-      </View>
+  const maxVisiblePages = 10; // only show 10 at once
+  let startPage = Math.floor((currentPage - 1) / maxVisiblePages) * maxVisiblePages + 1;
+  let endPage = Math.min(startPage + maxVisiblePages - 1, totalPages);
+
+  const pages: JSX.Element[] = [];
+
+  // Left indicator
+  if (startPage > 1) {
+    pages.push(
+      <TouchableOpacity
+        key="left"
+        style={styles.pageIndicator}
+        onPress={() => handlePageChange(startPage - 1)}
+      >
+        <Text style={styles.pageIndicatorText}>‹</Text>
+      </TouchableOpacity>
     );
-  };
+  }
+
+  // Page numbers
+  for (let i = startPage; i <= endPage; i++) {
+    pages.push(
+      <TouchableOpacity
+        key={i}
+        style={[
+          styles.pageNumber,
+          i === currentPage && styles.pageNumberActive,
+        ]}
+        onPress={() => handlePageChange(i)}
+      >
+        <Text
+          style={[
+            styles.pageNumberText,
+            i === currentPage && styles.pageNumberTextActive,
+          ]}
+        >
+          {i}
+        </Text>
+      </TouchableOpacity>
+    );
+  }
+
+  // Right indicator
+  if (endPage < totalPages) {
+    pages.push(
+      <TouchableOpacity
+        key="right"
+        style={styles.pageIndicator}
+        onPress={() => handlePageChange(endPage + 1)}
+      >
+        <Text style={styles.pageIndicatorText}>›</Text>
+      </TouchableOpacity>
+    );
+  }
+
+  return <View style={styles.pageNumbersContainer}>{pages}</View>;
+};
+
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
@@ -790,7 +856,7 @@ export default function JobsScreen() {
     </View>
   );
 
-  if (loading && !refreshing) {
+  if (loading && !refreshing && !searchLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#3B82F6" />
@@ -801,7 +867,7 @@ export default function JobsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Search Header */}
+      {/* Search Header - Fixed, won't reload */}
       <View style={styles.searchHeader}>
         <View style={styles.searchContainer}>
           <Search size={20} color="#6B7280" style={styles.searchIcon} />
@@ -839,22 +905,29 @@ export default function JobsScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Job List */}
-      <FlatList
-        data={jobs}
-        renderItem={renderJobCard}
-        keyExtractor={(item) => item._id}
-        style={styles.jobsList}
-        contentContainerStyle={styles.jobsContent}
-        showsVerticalScrollIndicator={false}
-        refreshing={refreshing}
-        onRefresh={handleRefresh}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.5}
-        ListHeaderComponent={jobs.length > 0 ? renderListHeader : null}
-        ListFooterComponent={renderListFooter}
-        ListEmptyComponent={renderEmptyState}
-      />
+      {/* Job List Content Area - Only this part refreshes */}
+      <View style={styles.contentContainer}>
+        {searchLoading && (
+          <View style={styles.searchLoadingContainer}>
+            <ActivityIndicator size="small" color="#3B82F6" />
+            <Text style={styles.searchLoadingText}>Searching jobs...</Text>
+          </View>
+        )}
+
+        <FlatList
+          data={jobs}
+          renderItem={renderJobCard}
+          keyExtractor={(item) => item._id}
+          style={styles.jobsList}
+          contentContainerStyle={styles.jobsContent}
+          showsVerticalScrollIndicator={false}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          ListHeaderComponent={jobs.length > 0 ? renderListHeader : null}
+          ListFooterComponent={renderPagination}
+          ListEmptyComponent={renderEmptyState}
+        />
+      </View>
 
       {/* Filter Modal */}
       <FilterModal
@@ -882,7 +955,7 @@ export default function JobsScreen() {
   );
 }
 
-// Styles
+// Updated Styles with Pagination
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -907,6 +980,30 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  contentContainer: {
+    flex: 1,
+  },
+  searchLoadingContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 12,
+    backgroundColor: '#EFF6FF',
+    marginHorizontal: 16,
+    marginTop: 8,
+    borderRadius: 8,
+  },
+  searchLoadingText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#3B82F6',
+    fontWeight: '500',
   },
   searchContainer: {
     flex: 1,
@@ -959,6 +1056,7 @@ const styles = StyleSheet.create({
   },
   jobsContent: {
     padding: 16,
+    paddingBottom: 32,
   },
   listHeader: {
     flexDirection: 'row',
@@ -1099,10 +1197,9 @@ const styles = StyleSheet.create({
   actionButtons: {
     flexDirection: 'row',
     justifyContent: 'center',
-    width: 100, // set fixed width
-    alignSelf: 'center', // keeps it centered
+    width: 100,
+    alignSelf: 'center',
   },
-
   actionButton: {
     width: 32,
     height: 32,
@@ -1112,45 +1209,117 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 8,
   },
-  loadingMore: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  loadingMoreText: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  paginationFooter: {
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-    backgroundColor: '#F9FAFB',
+  applyButton: {
+    flex: 1,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderRadius: 12,
+    backgroundColor: '#3B82F6',
+    alignItems: 'center',
+  },
+  applyButtonText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  applyText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+
+  // New Pagination Styles
+pageNumbersContainer: {
+  flexDirection: 'row',
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginVertical: 10,
+  flexWrap: 'nowrap',
+},
+  paginationContainer: {
+    backgroundColor: '#FFFFFF',
+
+    borderRadius: 12,
+    padding: 16,
     marginTop: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   paginationInfo: {
     alignItems: 'center',
+    marginBottom: 16,
   },
   paginationText: {
     fontSize: 14,
     color: '#6B7280',
-    marginBottom: 12,
     textAlign: 'center',
   },
-  loadMoreButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: '#3B82F6',
+  paginationControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  paginationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#F3F4F6',
     borderRadius: 8,
+    minWidth: 80,
+    justifyContent: 'center',
+  },
+  paginationButtonDisabled: {
+    backgroundColor: '#F9FAFB',
+    opacity: 0.5,
+  },
+  paginationButtonText: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+    marginHorizontal: 4,
+  },
+  paginationButtonTextDisabled: {
+    color: '#D1D5DB',
+  },
+  pageNumbers: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  loadMoreButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
+pageNumber: {
+  paddingHorizontal: 12,
+  paddingVertical: 6,
+  marginHorizontal: 2,
+  borderRadius: 6,
+  borderWidth: 1,
+  borderColor: '#ccc',
+},
+pageNumberActive: {
+  backgroundColor: '#2563EB',
+  borderColor: '#2563EB',
+},
+pageNumberText: {
+  fontSize: 14,
+  color: '#333',
+},
+pageNumberTextActive: {
+  color: '#fff',
+  fontWeight: 'bold',
+},
+pageIndicator: {
+  paddingHorizontal: 10,
+  paddingVertical: 6,
+  marginHorizontal: 4,
+},
+pageIndicatorText: {
+  fontSize: 16,
+  color: '#2563EB',
+  fontWeight: 'bold',
+},
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -1195,7 +1364,8 @@ const styles = StyleSheet.create({
     color: '#3B82F6',
     fontWeight: '600',
   },
-  // Modal Styles
+
+  // Modal Styles (keeping existing ones)
   modalContainer: {
     flex: 1,
     backgroundColor: '#FFFFFF',
@@ -1336,20 +1506,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     fontWeight: '600',
   },
-  applyButton: {
-    flex: 1,
-    paddingVertical: 8, // space top & bottom
-    paddingHorizontal: 12, // space left & right
-    borderRadius: 12,
-    backgroundColor: '#3B82F6',
-    // marginLeft: 8,
-    alignItems: 'center',
-  },
-  applyButtonText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
+
   // Sort Modal Styles
   sortModalOverlay: {
     flex: 1,
@@ -1418,11 +1575,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FFFFFF',
     fontWeight: '600',
-  },
-  applyText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-    textAlign: 'center',
   },
 });
