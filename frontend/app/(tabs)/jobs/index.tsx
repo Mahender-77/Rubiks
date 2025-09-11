@@ -31,10 +31,11 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useColorScheme,
   View,
 } from 'react-native';
 import { fetchJobsAPI, jobFilter } from '../../../utils/api';
-
+import Colors from '../../../constants/Colors';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -87,6 +88,7 @@ const CustomSlider: React.FC<{
   style?: any;
 }> = ({ value, minimumValue, maximumValue, onValueChange, style }) => {
   const [sliderWidth, setSliderWidth] = useState(0);
+  const colorScheme = useColorScheme() ?? 'light';
 
   const percentage =
     ((value - minimumValue) / (maximumValue - minimumValue)) * 100;
@@ -103,16 +105,63 @@ const CustomSlider: React.FC<{
   };
 
   return (
-    <View style={[styles.customSlider, style]}>
+    <View
+      style={[
+        {
+          height: 40,
+          justifyContent: 'center',
+        },
+        style,
+      ]}
+    >
       <TouchableOpacity
-        style={styles.sliderTrack}
+        style={{
+          height: 6,
+          backgroundColor: Colors[colorScheme].background,
+          borderRadius: 3,
+          position: 'relative',
+        }}
         onPress={handlePress}
         onLayout={(event) => setSliderWidth(event.nativeEvent.layout.width)}
         activeOpacity={1}
       >
-        <View style={styles.sliderTrackInactive} />
-        <View style={[styles.sliderTrackActive, { width: `${percentage}%` }]} />
-        <View style={[styles.sliderThumb, { left: `${percentage}%` }]} />
+        <View
+          style={{
+            height: 6,
+            backgroundColor: Colors[colorScheme].lightBackground,
+            borderRadius: 3,
+          }}
+        />
+        <View
+          style={[
+            {
+              height: 6,
+              backgroundColor: Colors[colorScheme].text,
+              borderRadius: 3,
+              position: 'absolute',
+            },
+            { width: `${percentage}%` },
+          ]}
+        />
+        <View
+          style={[
+            {
+              width: 20,
+              height: 20,
+              backgroundColor: Colors[colorScheme].lightBackground,
+              borderRadius: 10,
+              position: 'absolute',
+              top: -7,
+              marginLeft: -10,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 4,
+            },
+            { left: `${percentage}%` },
+          ]}
+        />
       </TouchableOpacity>
     </View>
   );
@@ -135,6 +184,7 @@ const FilterModal: React.FC<{
   onClearFilters,
 }) => {
   const [tempFilters, setTempFilters] = useState<Filters>(activeFilters);
+  const colorScheme = useColorScheme() ?? 'light';
 
   useEffect(() => {
     setTempFilters(activeFilters);
@@ -159,30 +209,63 @@ const FilterModal: React.FC<{
     options: string[],
     category: keyof Filters
   ) => (
-    <View style={styles.filterSection}>
-      <Text style={styles.filterSectionTitle}>{title}</Text>
-      <View style={styles.filterOptions}>
+    <View
+      style={{
+        marginBottom: 24,
+      }}
+    >
+      <Text
+        style={{
+          fontSize: 16,
+          fontWeight: '600',
+          color: Colors[colorScheme].text,
+          marginBottom: 12,
+        }}
+      >
+        {title}
+      </Text>
+      <View
+        style={{
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+        }}
+      >
         {options.map((option, index) => (
           <TouchableOpacity
             key={index}
             style={[
-              styles.filterOption,
-              (tempFilters[category] as string[]).includes(option) &&
-                styles.filterOptionSelected,
+              {
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                backgroundColor: Colors[colorScheme].lightBackground,
+                borderRadius: 8,
+                marginRight: 8,
+                marginBottom: 8,
+              },
+              (tempFilters[category] as string[]).includes(option) && {
+                backgroundColor: Colors[colorScheme].text,
+              },
             ]}
             onPress={() => toggleFilter(category, option)}
           >
             <Text
               style={[
-                styles.filterOptionText,
-                (tempFilters[category] as string[]).includes(option) &&
-                  styles.filterOptionTextSelected,
+                {
+                  fontSize: 14,
+                  color: Colors[colorScheme].text,
+                  marginRight: 4,
+                },
+                (tempFilters[category] as string[]).includes(option) && {
+                  color: Colors[colorScheme].darkText,
+                },
               ]}
             >
               {option}
             </Text>
             {(tempFilters[category] as string[]).includes(option) && (
-              <Check size={16} color="#FFFFFF" />
+              <Check size={16} color={Colors[colorScheme].background} />
             )}
           </TouchableOpacity>
         ))}
@@ -191,19 +274,56 @@ const FilterModal: React.FC<{
   );
 
   const renderSalaryRange = () => (
-    <View style={styles.filterSection}>
-      <Text style={styles.filterSectionTitle}>Salary Range</Text>
-      <View style={styles.salaryRangeContainer}>
-        <Text style={styles.salaryLabel}>
+    <View
+      style={{
+        marginBottom: 24,
+      }}
+    >
+      <Text
+        style={{
+          fontSize: 16,
+          fontWeight: '600',
+          color: Colors[colorScheme].text,
+          marginBottom: 12,
+        }}
+      >
+        Salary Range
+      </Text>
+      <View
+        style={{
+          backgroundColor: Colors[colorScheme].background,
+          borderRadius: 12,
+          padding: 16,
+        }}
+      >
+        <Text
+          style={{
+            fontSize: 16,
+            fontWeight: '600',
+            color: Colors[colorScheme].text,
+            textAlign: 'center',
+            marginBottom: 16,
+          }}
+        >
           ${tempFilters.minSalary.toLocaleString()} - $
           {tempFilters.maxSalary.toLocaleString()}
         </Text>
-        <View style={styles.sliderContainer}>
-          <Text style={styles.sliderLabel}>
+        <View
+          style={{
+            marginBottom: 16,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 14,
+              color: Colors[colorScheme].text,
+              marginBottom: 8,
+            }}
+          >
             Min: ${tempFilters.minSalary.toLocaleString()}
           </Text>
           <CustomSlider
-            style={styles.slider}
+            style={{ height: 40 }}
             minimumValue={filterOptions?.salaryRange.min || 0}
             maximumValue={filterOptions?.salaryRange.max || 200000}
             value={tempFilters.minSalary}
@@ -215,12 +335,18 @@ const FilterModal: React.FC<{
             }
           />
         </View>
-        <View style={styles.sliderContainer}>
-          <Text style={styles.sliderLabel}>
+        <View style={{ marginBottom: 16 }}>
+          <Text
+            style={{
+              fontSize: 14,
+              color: Colors[colorScheme].text,
+              marginBottom: 8,
+            }}
+          >
             Max: ${tempFilters.maxSalary.toLocaleString()}
           </Text>
           <CustomSlider
-            style={styles.slider}
+            style={{ height: 40 }}
             minimumValue={filterOptions?.salaryRange.min || 0}
             maximumValue={filterOptions?.salaryRange.max || 200000}
             value={tempFilters.maxSalary}
@@ -242,16 +368,51 @@ const FilterModal: React.FC<{
       animationType="slide"
       presentationStyle="pageSheet"
     >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle}>Filter Jobs</Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <X size={24} color="#374151" />
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: Colors[colorScheme].background,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: Colors[colorScheme].borderColor,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: '600',
+              color: Colors[colorScheme].text,
+            }}
+          >
+            Filter Jobs
+          </Text>
+          <TouchableOpacity
+            onPress={onClose}
+            style={{
+              width: 32,
+              height: 32,
+              backgroundColor: Colors[colorScheme].errorText,
+              borderRadius: 8,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            <X size={24} color={Colors[colorScheme].darkText} />
           </TouchableOpacity>
         </View>
 
         <ScrollView
-          style={styles.modalContent}
+          style={{
+            flex: 1,
+            padding: 16,
+          }}
           showsVerticalScrollIndicator={false}
         >
           {filterOptions?.jobTypes &&
@@ -271,15 +432,55 @@ const FilterModal: React.FC<{
           {renderSalaryRange()}
         </ScrollView>
 
-        <View style={styles.modalFooter}>
-          <TouchableOpacity style={styles.clearButton} onPress={onClearFilters}>
-            <Text style={styles.clearButtonText}>Clear All</Text>
+        <View
+          style={{
+            flexDirection: 'row',
+            padding: 16,
+            borderTopWidth: 1,
+            borderTopColor: Colors[colorScheme].background,
+          }}
+        >
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              paddingVertical: 12,
+              borderRadius: 12,
+              backgroundColor: Colors[colorScheme].lightBackground,
+              marginRight: 8,
+              alignItems: 'center',
+            }}
+            onPress={onClearFilters}
+          >
+            <Text
+              style={{
+                fontSize: 16,
+                color: Colors[colorScheme].text,
+                fontWeight: '600',
+              }}
+            >
+              Clear All
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.applyButton}
+            style={{
+              flex: 1,
+              paddingVertical: 8,
+              paddingHorizontal: 12,
+              borderRadius: 12,
+              backgroundColor: Colors[colorScheme].text,
+              alignItems: 'center',
+            }}
             onPress={() => onApplyFilters(tempFilters)}
           >
-            <Text style={styles.applyButtonText}>Apply Filters</Text>
+            <Text
+              style={{
+                fontSize: 16,
+                color: Colors[colorScheme].darkText,
+                fontWeight: '600',
+              }}
+            >
+              Apply Filters
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -297,6 +498,7 @@ const SortModal: React.FC<{
 }> = ({ visible, onClose, sortBy, sortOrder, onApplySort }) => {
   const [tempSortBy, setTempSortBy] = useState(sortBy);
   const [tempSortOrder, setTempSortOrder] = useState(sortOrder);
+  const colorScheme = useColorScheme() ?? 'light';
 
   const sortOptions = [
     { key: 'postedDate', label: 'Date Posted' },
@@ -312,85 +514,203 @@ const SortModal: React.FC<{
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.sortModalOverlay}>
-        <View style={styles.sortModalContainer}>
-          <View style={styles.sortModalHeader}>
-            <Text style={styles.sortModalTitle}>Sort Jobs</Text>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          justifyContent: 'flex-end',
+        }}
+      >
+        <View
+          style={{
+            backgroundColor: Colors[colorScheme].background,
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            paddingBottom: 32,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: 16,
+              borderBottomWidth: 1,
+              borderBottomColor: Colors[colorScheme].background,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: '600',
+                color: Colors[colorScheme].text,
+              }}
+            >
+              Sort Jobs
+            </Text>
             <TouchableOpacity onPress={onClose}>
-              <X size={24} color="#374151" />
+              <X size={24} color={Colors[colorScheme].errorText} />
             </TouchableOpacity>
           </View>
 
-          <View style={styles.sortOptions}>
-            <Text style={styles.sortSectionTitle}>Sort By</Text>
+          <View style={{ padding: 16 }}>
+            <Text
+              style={{
+                fontSize: 16,
+                fontWeight: '600',
+                color: Colors[colorScheme].text,
+                marginBottom: 12,
+              }}
+            >
+              Sort By
+            </Text>
             {sortOptions.map((option) => (
               <TouchableOpacity
                 key={option.key}
                 style={[
-                  styles.sortOption,
-                  tempSortBy === option.key && styles.sortOptionSelected,
+                  {
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    paddingVertical: 12,
+                    paddingHorizontal: 16,
+                    backgroundColor: Colors[colorScheme].lightBackground,
+                    borderRadius: 12,
+                    marginBottom: 8,
+                  },
+                  tempSortBy === option.key && {
+                    backgroundColor: Colors[colorScheme].text,
+                  },
                 ]}
                 onPress={() => setTempSortBy(option.key)}
               >
                 <Text
                   style={[
-                    styles.sortOptionText,
-                    tempSortBy === option.key && styles.sortOptionTextSelected,
+                    {
+                      fontSize: 16,
+                      color: Colors[colorScheme].text,
+                    },
+                    tempSortBy === option.key && {
+                      color: Colors[colorScheme].darkText,
+                      fontWeight: '600',
+                    },
                   ]}
                 >
                   {option.label}
                 </Text>
                 {tempSortBy === option.key && (
-                  <Check size={16} color="#3B82F6" />
+                  <Check size={16} color={Colors[colorScheme].darkText} />
                 )}
               </TouchableOpacity>
             ))}
 
-            <Text style={[styles.sortSectionTitle, { marginTop: 20 }]}>
+            <Text
+              style={[
+                {
+                  fontSize: 16,
+                  fontWeight: '600',
+                  color: Colors[colorScheme].text,
+                  marginBottom: 12,
+                  marginTop: 20,
+                },
+              ]}
+            >
               Order
             </Text>
             <TouchableOpacity
               style={[
-                styles.sortOption,
-                tempSortOrder === 'desc' && styles.sortOptionSelected,
+                {
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  paddingVertical: 12,
+                  paddingHorizontal: 16,
+                  backgroundColor: Colors[colorScheme].lightBackground,
+                  borderRadius: 12,
+                  marginBottom: 8,
+                },
+                tempSortOrder === 'desc' && {
+                  backgroundColor: Colors[colorScheme].text,
+                },
               ]}
               onPress={() => setTempSortOrder('desc')}
             >
               <Text
                 style={[
-                  styles.sortOptionText,
-                  tempSortOrder === 'desc' && styles.sortOptionTextSelected,
+                  {
+                    fontSize: 16,
+                    color: Colors[colorScheme].text,
+                  },
+                  tempSortOrder === 'desc' && {
+                    color: Colors[colorScheme].darkText,
+                    fontWeight: '600',
+                  },
                 ]}
               >
                 Newest First
               </Text>
-              {tempSortOrder === 'desc' && <Check size={16} color="#3B82F6" />}
+              {tempSortOrder === 'desc' && (
+                <Check size={16} color={Colors[colorScheme].darkText} />
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[
-                styles.sortOption,
-                tempSortOrder === 'asc' && styles.sortOptionSelected,
+                {
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  paddingVertical: 12,
+                  paddingHorizontal: 16,
+                  backgroundColor: Colors[colorScheme].lightBackground,
+                  borderRadius: 12,
+                  marginBottom: 8,
+                },
+                tempSortOrder === 'asc' && {
+                  backgroundColor: Colors[colorScheme].text,
+                },
               ]}
               onPress={() => setTempSortOrder('asc')}
             >
               <Text
                 style={[
-                  styles.sortOptionText,
-                  tempSortOrder === 'asc' && styles.sortOptionTextSelected,
+                  {
+                    fontSize: 16,
+                    color: Colors[colorScheme].text,
+                  },
+                  tempSortOrder === 'asc' && {
+                    color: Colors[colorScheme].darkText,
+                    fontWeight: '600',
+                  },
                 ]}
               >
                 Oldest First
               </Text>
-              {tempSortOrder === 'asc' && <Check size={16} color="#3B82F6" />}
+              {tempSortOrder === 'asc' && (
+                <Check size={16} color={Colors[colorScheme].darkText} />
+              )}
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity
-            style={styles.sortApplyButton}
+            style={{
+              marginHorizontal: 16,
+              paddingVertical: 16,
+              backgroundColor: Colors[colorScheme].text,
+              borderRadius: 12,
+              alignItems: 'center',
+            }}
             onPress={handleApply}
           >
-            <Text style={styles.sortApplyButtonText}>Apply</Text>
+            <Text
+              style={{
+                fontSize: 16,
+                color: Colors[colorScheme].darkText,
+                fontWeight: '600',
+              }}
+            >
+              Apply
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -400,6 +720,7 @@ const SortModal: React.FC<{
 
 // Main Component
 export default function JobsScreen() {
+  const colorScheme = useColorScheme() ?? 'light';
   const router = useRouter();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
@@ -668,40 +989,128 @@ export default function JobsScreen() {
 
   const renderJobCard = ({ item }: { item: Job }) => (
     <TouchableOpacity
-      style={styles.jobCard}
+      style={{
+        backgroundColor: Colors[colorScheme].background,
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+        elevation: 4,
+        borderWidth: 1,
+        borderColor: Colors[colorScheme].borderColor,
+      }}
       onPress={() => router.push(`/jobs/${item._id}`)} // This will navigate to job details
     >
-      <View style={styles.jobHeader}>
-        <View style={styles.companyInfo}>
-          <View style={styles.companyLogo}>
-            <Building size={20} color="#6B7280" />
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          marginBottom: 12,
+        }}
+      >
+        <View
+          style={{
+            flex: 1,
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+          }}
+        >
+          <View
+            style={{
+              width: 48,
+              height: 48,
+              backgroundColor: Colors[colorScheme].text,
+              borderRadius: 12,
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginRight: 12,
+            }}
+          >
+            <Building size={20} color={Colors[colorScheme].darkText} />
           </View>
-          <View style={styles.jobInfo}>
-            <Text style={styles.jobTitle} numberOfLines={2}>
+          <View
+            style={{
+              flex: 1,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: '600',
+                color: Colors[colorScheme].text,
+                lineHeight: 24,
+                marginBottom: 4,
+              }}
+              numberOfLines={2}
+            >
               {item.title}
             </Text>
-            <Text style={styles.companyName}>{item.company}</Text>
+            <Text
+              style={{
+                fontSize: 14,
+                color: Colors[colorScheme].text,
+              }}
+            >
+              {item.company}
+            </Text>
           </View>
         </View>
         <View
           style={[
-            styles.jobType,
-            { backgroundColor: getJobTypeColor(item.type) + '20' },
+            {
+              paddingHorizontal: 8,
+              paddingVertical: 4,
+              borderRadius: 8,
+              marginLeft: 12,
+              backgroundColor: getJobTypeColor(item.type) + '20',
+            },
           ]}
         >
           <Text
-            style={[styles.jobTypeText, { color: getJobTypeColor(item.type) }]}
+            style={[
+              {
+                fontSize: 12,
+                fontWeight: '600',
+                color: getJobTypeColor(item.type),
+              },
+            ]}
           >
             {item.type.replace('-', ' ').toUpperCase()}
           </Text>
         </View>
       </View>
 
-      <View style={styles.jobDetails}>
-        <View style={styles.detailRow}>
-          <View style={styles.detailItem}>
-            <MapPin size={14} color="#6B7280" />
-            <Text style={styles.detailText}>{item.location}</Text>
+      <View style={{ marginBottom: 12 }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 8,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              flex: 1,
+            }}
+          >
+            <MapPin size={14} color={Colors[colorScheme].text} />
+            <Text
+              style={{
+                marginLeft: 6,
+                fontSize: 14,
+                color: Colors[colorScheme].text,
+                flex: 1,
+              }}
+            >
+              {item.location}
+            </Text>
           </View>
           {item.salary && (
             <View
@@ -712,41 +1121,131 @@ export default function JobsScreen() {
                 justifyContent: 'flex-end',
               }}
             >
-              <Text style={[styles.detailText, { flex: 0 }]}>
+              <Text
+                style={[
+                  {
+                    color: Colors[colorScheme].text,
+                  },
+                ]}
+              >
                 {formatSalary(item.salary)}
               </Text>
             </View>
           )}
         </View>
 
-        <View style={styles.detailRow}>
-          <View style={styles.detailItem}>
-            <Clock size={14} color="#6B7280" />
-            <Text style={styles.detailText}>{formatDate(item.postedDate)}</Text>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 8,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              flex: 1,
+            }}
+          >
+            <Clock size={14} color={Colors[colorScheme].text} />
+            <Text
+              style={{
+                marginLeft: 6,
+                fontSize: 14,
+                color: Colors[colorScheme].text,
+                flex: 1,
+              }}
+            >
+              {formatDate(item.postedDate)}
+            </Text>
           </View>
-          <Text style={styles.applicationsText}>
+          <Text
+            style={{
+              fontSize: 14,
+              color: Colors[colorScheme].text,
+              fontWeight: '500',
+            }}
+          >
             {item.applications} applications
           </Text>
         </View>
       </View>
 
-      <View style={styles.jobFooter}>
-        <View style={styles.skillsContainer}>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <View
+          style={{
+            flex: 1,
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+          }}
+        >
           {item.skills.slice(0, 3).map((skill, index) => (
-            <View key={index} style={styles.skillTag}>
-              <Text style={styles.skillText}>{skill}</Text>
+            <View
+              key={index}
+              style={{
+                backgroundColor: Colors[colorScheme].lightBackground,
+                borderRadius: 6,
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                marginRight: 6,
+                marginBottom: 4,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 12,
+                  color: Colors[colorScheme].text,
+                  fontWeight: '500',
+                }}
+              >
+                {skill}
+              </Text>
             </View>
           ))}
           {item.skills.length > 3 && (
-            <Text style={styles.moreSkills}>
+            <Text style={{ fontSize: 12, color: Colors[colorScheme].text }}>
               +{item.skills.length - 3} more
             </Text>
           )}
         </View>
 
-        <View style={styles.actionButtons}>
-          <TouchableOpacity style={styles.applyButton}>
-            <Text style={styles.applyText}>Apply</Text>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'center',
+            width: 100,
+            alignSelf: 'center',
+          }}
+        >
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              paddingVertical: 8,
+              paddingHorizontal: 12,
+              borderRadius: 12,
+              backgroundColor: Colors[colorScheme].text,
+              alignItems: 'center',
+            }}
+          >
+            <Text
+              style={{
+                color: Colors[colorScheme].darkText,
+                fontSize: 14,
+                fontWeight: 'bold',
+                textAlign: 'center',
+              }}
+            >
+              Apply
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -754,102 +1253,236 @@ export default function JobsScreen() {
   );
 
   const renderListHeader = () => (
-    <View style={styles.listHeader}>
-      <Text style={styles.resultsText}>
+    <View
+      style={{
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 16,
+      }}
+    >
+      <Text
+        style={{
+          fontSize: 16,
+          color: Colors[colorScheme].text,
+          fontWeight: '500',
+        }}
+      >
         {searchLoading ? 'Searching...' : `${totalJobs} jobs found`}
       </Text>
       <TouchableOpacity
-        style={styles.sortButton}
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+          backgroundColor: Colors[colorScheme].background,
+          borderRadius: 8,
+          borderWidth: 1,
+          borderColor: Colors[colorScheme].borderColor,
+        }}
         onPress={() => setShowSortModal(true)}
       >
-        <SlidersHorizontal size={16} color="#6B7280" />
-        <Text style={styles.sortButtonText}>Sort</Text>
-        <ChevronDown size={16} color="#6B7280" />
+        <SlidersHorizontal size={16} color={Colors[colorScheme].text} />
+        <Text
+          style={{
+            marginLeft: 8,
+            marginRight: 4,
+            fontSize: 14,
+            color: Colors[colorScheme].text,
+          }}
+        >
+          Sort
+        </Text>
+        <ChevronDown size={16} color={Colors[colorScheme].text} />
       </TouchableOpacity>
     </View>
   );
 
   // New Pagination Component
- const renderPagination = () => {
-  if (totalPages <= 1) return null;
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
 
-  const maxVisiblePages = 10; // only show 10 at once
-  let startPage = Math.floor((currentPage - 1) / maxVisiblePages) * maxVisiblePages + 1;
-  let endPage = Math.min(startPage + maxVisiblePages - 1, totalPages);
+    const maxVisiblePages = 10; // only show 10 at once
+    let startPage =
+      Math.floor((currentPage - 1) / maxVisiblePages) * maxVisiblePages + 1;
+    let endPage = Math.min(startPage + maxVisiblePages - 1, totalPages);
 
-  const pages: JSX.Element[] = [];
+    const pages: JSX.Element[] = [];
 
-  // Left indicator
-  if (startPage > 1) {
-    pages.push(
-      <TouchableOpacity
-        key="left"
-        style={styles.pageIndicator}
-        onPress={() => handlePageChange(startPage - 1)}
-      >
-        <Text style={styles.pageIndicatorText}>‹</Text>
-      </TouchableOpacity>
-    );
-  }
-
-  // Page numbers
-  for (let i = startPage; i <= endPage; i++) {
-    pages.push(
-      <TouchableOpacity
-        key={i}
-        style={[
-          styles.pageNumber,
-          i === currentPage && styles.pageNumberActive,
-        ]}
-        onPress={() => handlePageChange(i)}
-      >
-        <Text
-          style={[
-            styles.pageNumberText,
-            i === currentPage && styles.pageNumberTextActive,
-          ]}
+    // Left indicator
+    if (startPage > 1) {
+      pages.push(
+        <TouchableOpacity
+          key="left"
+          style={{
+            paddingHorizontal: 10,
+            paddingVertical: 6,
+            marginHorizontal: 4,
+          }}
+          onPress={() => handlePageChange(startPage - 1)}
         >
-          {i}
-        </Text>
-      </TouchableOpacity>
-    );
-  }
+          <Text
+            style={{
+              fontSize: 16,
+              color: Colors[colorScheme].text,
+              fontWeight: 'bold',
+            }}
+          >
+            ‹
+          </Text>
+        </TouchableOpacity>
+      );
+    }
 
-  // Right indicator
-  if (endPage < totalPages) {
-    pages.push(
-      <TouchableOpacity
-        key="right"
-        style={styles.pageIndicator}
-        onPress={() => handlePageChange(endPage + 1)}
+    // Page numbers
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(
+        <TouchableOpacity
+          key={i}
+          style={[
+            {
+              paddingHorizontal: 12,
+              paddingVertical: 6,
+              marginHorizontal: 2,
+              borderRadius: 6,
+              borderWidth: 1,
+              borderColor: Colors[colorScheme].text,
+            },
+            i === currentPage && {
+              backgroundColor: Colors[colorScheme].text,
+              borderColor: Colors[colorScheme].text,
+            },
+          ]}
+          onPress={() => handlePageChange(i)}
+        >
+          <Text
+            style={[
+              {
+                fontSize: 14,
+                color: Colors[colorScheme].text,
+              },
+              i === currentPage && {
+                color: Colors[colorScheme].darkText,
+                backgroundColor: Colors[colorScheme].text,
+              },
+            ]}
+          >
+            {i}
+          </Text>
+        </TouchableOpacity>
+      );
+    }
+
+    // Right indicator
+    if (endPage < totalPages) {
+      pages.push(
+        <TouchableOpacity
+          key="right"
+          style={{
+            paddingHorizontal: 10,
+            paddingVertical: 6,
+            marginHorizontal: 4,
+          }}
+          onPress={() => handlePageChange(endPage + 1)}
+        >
+          <Text
+            style={{
+              fontSize: 16,
+              color: Colors[colorScheme].text,
+              fontWeight: 'bold',
+            }}
+          >
+            ›
+          </Text>
+        </TouchableOpacity>
+      );
+    }
+
+    return (
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginVertical: 10,
+          flexWrap: 'nowrap',
+        }}
       >
-        <Text style={styles.pageIndicatorText}>›</Text>
-      </TouchableOpacity>
+        {pages}
+      </View>
     );
-  }
-
-  return <View style={styles.pageNumbersContainer}>{pages}</View>;
-};
-
+  };
 
   const renderEmptyState = () => (
-    <View style={styles.emptyContainer}>
-      <View style={styles.emptyIconContainer}>
-        <Briefcase size={64} color="#D1D5DB" />
+    <View
+      style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 32,
+        paddingVertical: 64,
+      }}
+    >
+      <View
+        style={{
+          width: 96,
+          height: 96,
+          backgroundColor: Colors[colorScheme].background,
+          borderRadius: 48,
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginBottom: 24,
+        }}
+      >
+        <Briefcase size={64} color={Colors[colorScheme].darkText} />
       </View>
-      <Text style={styles.emptyTitle}>
+      <Text
+        style={{
+          fontSize: 20,
+          fontWeight: '600',
+          color: Colors[colorScheme].text,
+          textAlign: 'center',
+          marginBottom: 8,
+        }}
+      >
         {error ? 'Oops! Something went wrong' : 'No jobs available'}
       </Text>
-      <Text style={styles.emptySubtitle}>
+      <Text
+        style={{
+          fontSize: 16,
+          color: Colors[colorScheme].text,
+          textAlign: 'center',
+          lineHeight: 24,
+          marginBottom: 24,
+        }}
+      >
         {error
           ? error
           : searchQuery || getActiveFilterCount() > 0
           ? 'Try adjusting your search criteria or filters'
           : 'New job opportunities will appear here soon'}
       </Text>
-      <TouchableOpacity style={styles.refreshButton} onPress={handleRefresh}>
-        <RefreshCw size={16} color="#3B82F6" />
-        <Text style={styles.refreshButtonText}>
+      <TouchableOpacity
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          paddingHorizontal: 24,
+          paddingVertical: 12,
+          backgroundColor: Colors[colorScheme].background,
+          borderRadius: 12,
+        }}
+        onPress={handleRefresh}
+      >
+        <RefreshCw size={16} color={Colors[colorScheme].text} />
+        <Text
+          style={{
+            marginLeft: 8,
+            fontSize: 16,
+            color: Colors[colorScheme].text,
+            fontWeight: '600',
+          }}
+        >
           {error ? 'Try Again' : 'Refresh'}
         </Text>
       </TouchableOpacity>
@@ -858,46 +1491,122 @@ export default function JobsScreen() {
 
   if (loading && !refreshing && !searchLoading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: Colors[colorScheme].background,
+        }}
+      >
         <ActivityIndicator size="large" color="#3B82F6" />
-        <Text style={styles.loadingText}>Finding the best jobs for you...</Text>
+        <Text
+          style={{
+            marginTop: 16,
+            fontSize: 16,
+            color: Colors[colorScheme].text,
+            textAlign: 'center',
+          }}
+        >
+          Finding the best jobs for you...
+        </Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: Colors[colorScheme].background,
+      }}
+    >
       {/* Search Header - Fixed, won't reload */}
-      <View style={styles.searchHeader}>
-        <View style={styles.searchContainer}>
-          <Search size={20} color="#6B7280" style={styles.searchIcon} />
+      <View
+        style={{
+          flexDirection: 'row',
+          padding: 8,
+          backgroundColor: Colors[colorScheme].background,
+          borderBottomWidth: 0,
+          borderBottomColor: Colors[colorScheme].borderColor,
+          elevation: 2,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+        }}
+      >
+        <View
+          style={{
+            flex: 1,
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: Colors[colorScheme].lightBackground,
+            borderRadius: 10,
+            paddingHorizontal: 12,
+            marginRight: 12,
+          }}
+        >
+          <Search
+            size={20}
+            color={Colors[colorScheme].text}
+            style={{ marginRight: 8 }}
+          />
           <TextInput
-            style={styles.searchInput}
+            style={{
+              flex: 1,
+              paddingVertical: 12,
+              fontSize: 16,
+              color: Colors[colorScheme].text,
+            }}
             placeholder="Search jobs, companies, or keywords"
+            placeholderTextColor={Colors[colorScheme].text}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <X size={20} color="#6B7280" />
+              <X size={20} color={Colors[colorScheme].text} />
             </TouchableOpacity>
           )}
         </View>
 
         <TouchableOpacity
           style={[
-            styles.filterButton,
-            getActiveFilterCount() > 0 && styles.filterButtonActive,
+            {
+              width: 48,
+              height: 48,
+              backgroundColor: Colors[colorScheme].text,
+              borderRadius: 12,
+              justifyContent: 'center',
+              alignItems: 'center',
+              position: 'relative',
+            },
           ]}
           onPress={() => setShowFilterModal(true)}
         >
-          <Filter
-            size={20}
-            color={getActiveFilterCount() > 0 ? '#FFFFFF' : '#6B7280'}
-          />
+          <Filter size={20} color={Colors[colorScheme].darkText} />
           {getActiveFilterCount() > 0 && (
-            <View style={styles.filterBadge}>
-              <Text style={styles.filterBadgeText}>
+            <View
+              style={{
+                position: 'absolute',
+                top: -4,
+                right: -4,
+                backgroundColor: Colors[colorScheme].errorText,
+                borderRadius: 10,
+                minWidth: 20,
+                height: 20,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
+              <Text
+                style={{
+                  color: Colors[colorScheme].darkText,
+                  fontSize: 12,
+                  fontWeight: '600',
+                }}
+              >
                 {getActiveFilterCount()}
               </Text>
             </View>
@@ -906,11 +1615,35 @@ export default function JobsScreen() {
       </View>
 
       {/* Job List Content Area - Only this part refreshes */}
-      <View style={styles.contentContainer}>
+      <View
+        style={{
+          flex: 1,
+        }}
+      >
         {searchLoading && (
-          <View style={styles.searchLoadingContainer}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingVertical: 12,
+              backgroundColor: Colors[colorScheme].background,
+              marginHorizontal: 16,
+              marginTop: 8,
+              borderRadius: 8,
+            }}
+          >
             <ActivityIndicator size="small" color="#3B82F6" />
-            <Text style={styles.searchLoadingText}>Searching jobs...</Text>
+            <Text
+              style={{
+                marginLeft: 8,
+                fontSize: 14,
+                color: Colors[colorScheme].text,
+                fontWeight: '500',
+              }}
+            >
+              Searching jobs...
+            </Text>
           </View>
         )}
 
@@ -918,8 +1651,13 @@ export default function JobsScreen() {
           data={jobs}
           renderItem={renderJobCard}
           keyExtractor={(item) => item._id}
-          style={styles.jobsList}
-          contentContainerStyle={styles.jobsContent}
+          style={{
+            flex: 1,
+          }}
+          contentContainerStyle={{
+            padding: 16,
+            paddingBottom: 32,
+          }}
           showsVerticalScrollIndicator={false}
           refreshing={refreshing}
           onRefresh={handleRefresh}
@@ -954,626 +1692,3 @@ export default function JobsScreen() {
     </View>
   );
 }
-
-// Updated Styles with Pagination
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F9FAFB',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#6B7280',
-    textAlign: 'center',
-  },
-  searchHeader: {
-    flexDirection: 'row',
-    padding: 16,
-    paddingTop: 8,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  contentContainer: {
-    flex: 1,
-  },
-  searchLoadingContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 12,
-    backgroundColor: '#EFF6FF',
-    marginHorizontal: 16,
-    marginTop: 8,
-    borderRadius: 8,
-  },
-  searchLoadingText: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: '#3B82F6',
-    fontWeight: '500',
-  },
-  searchContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F3F4F6',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    marginRight: 12,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: '#374151',
-  },
-  filterButton: {
-    width: 48,
-    height: 48,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  filterButtonActive: {
-    backgroundColor: '#3B82F6',
-  },
-  filterBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: '#EF4444',
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  filterBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  jobsList: {
-    flex: 1,
-  },
-  jobsContent: {
-    padding: 16,
-    paddingBottom: 32,
-  },
-  listHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  resultsText: {
-    fontSize: 16,
-    color: '#374151',
-    fontWeight: '500',
-  },
-  sortButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  sortButtonText: {
-    marginLeft: 8,
-    marginRight: 4,
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  jobCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  jobHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  companyInfo: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  companyLogo: {
-    width: 48,
-    height: 48,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  jobInfo: {
-    flex: 1,
-  },
-  jobTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-    lineHeight: 24,
-    marginBottom: 4,
-  },
-  companyName: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  jobType: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    marginLeft: 12,
-  },
-  jobTypeText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  jobDetails: {
-    marginBottom: 12,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  detailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  detailText: {
-    marginLeft: 6,
-    fontSize: 14,
-    color: '#6B7280',
-    flex: 1,
-  },
-  applicationsText: {
-    fontSize: 14,
-    color: '#6B7280',
-    fontWeight: '500',
-  },
-  jobFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  skillsContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-  },
-  skillTag: {
-    backgroundColor: '#EFF6FF',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    marginRight: 6,
-    marginBottom: 4,
-  },
-  skillText: {
-    fontSize: 12,
-    color: '#3B82F6',
-    fontWeight: '500',
-  },
-  moreSkills: {
-    fontSize: 12,
-    color: '#6B7280',
-    fontStyle: 'italic',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    width: 100,
-    alignSelf: 'center',
-  },
-  actionButton: {
-    width: 32,
-    height: 32,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
-  },
-  applyButton: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    backgroundColor: '#3B82F6',
-    alignItems: 'center',
-  },
-  applyButtonText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  applyText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-
-  // New Pagination Styles
-pageNumbersContainer: {
-  flexDirection: 'row',
-  justifyContent: 'center',
-  alignItems: 'center',
-  marginVertical: 10,
-  flexWrap: 'nowrap',
-},
-  paginationContainer: {
-    backgroundColor: '#FFFFFF',
-
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  paginationInfo: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  paginationText: {
-    fontSize: 14,
-    color: '#6B7280',
-    textAlign: 'center',
-  },
-  paginationControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  paginationButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 8,
-    minWidth: 80,
-    justifyContent: 'center',
-  },
-  paginationButtonDisabled: {
-    backgroundColor: '#F9FAFB',
-    opacity: 0.5,
-  },
-  paginationButtonText: {
-    fontSize: 14,
-    color: '#6B7280',
-    fontWeight: '500',
-    marginHorizontal: 4,
-  },
-  paginationButtonTextDisabled: {
-    color: '#D1D5DB',
-  },
-  pageNumbers: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-pageNumber: {
-  paddingHorizontal: 12,
-  paddingVertical: 6,
-  marginHorizontal: 2,
-  borderRadius: 6,
-  borderWidth: 1,
-  borderColor: '#ccc',
-},
-pageNumberActive: {
-  backgroundColor: '#2563EB',
-  borderColor: '#2563EB',
-},
-pageNumberText: {
-  fontSize: 14,
-  color: '#333',
-},
-pageNumberTextActive: {
-  color: '#fff',
-  fontWeight: 'bold',
-},
-pageIndicator: {
-  paddingHorizontal: 10,
-  paddingVertical: 6,
-  marginHorizontal: 4,
-},
-pageIndicatorText: {
-  fontSize: 16,
-  color: '#2563EB',
-  fontWeight: 'bold',
-},
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingVertical: 64,
-  },
-  emptyIconContainer: {
-    width: 96,
-    height: 96,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#374151',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  emptySubtitle: {
-    fontSize: 16,
-    color: '#6B7280',
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 24,
-  },
-  refreshButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: '#EFF6FF',
-    borderRadius: 12,
-  },
-  refreshButtonText: {
-    marginLeft: 8,
-    fontSize: 16,
-    color: '#3B82F6',
-    fontWeight: '600',
-  },
-
-  // Modal Styles (keeping existing ones)
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  closeButton: {
-    width: 32,
-    height: 32,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    flex: 1,
-    padding: 16,
-  },
-  filterSection: {
-    marginBottom: 24,
-  },
-  filterSectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 12,
-  },
-  filterOptions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  filterOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 8,
-    marginRight: 8,
-    marginBottom: 8,
-  },
-  filterOptionSelected: {
-    backgroundColor: '#3B82F6',
-  },
-  filterOptionText: {
-    fontSize: 14,
-    color: '#374151',
-    marginRight: 4,
-  },
-  filterOptionTextSelected: {
-    color: '#FFFFFF',
-  },
-  salaryRangeContainer: {
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
-    padding: 16,
-  },
-  salaryLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  sliderContainer: {
-    marginBottom: 16,
-  },
-  sliderLabel: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 8,
-  },
-  slider: {
-    height: 40,
-  },
-  customSlider: {
-    height: 40,
-    justifyContent: 'center',
-  },
-  sliderTrack: {
-    height: 6,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 3,
-    position: 'relative',
-  },
-  sliderTrackInactive: {
-    height: 6,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 3,
-  },
-  sliderTrackActive: {
-    height: 6,
-    backgroundColor: '#3B82F6',
-    borderRadius: 3,
-    position: 'absolute',
-  },
-  sliderThumb: {
-    width: 20,
-    height: 20,
-    backgroundColor: '#3B82F6',
-    borderRadius: 10,
-    position: 'absolute',
-    top: -7,
-    marginLeft: -10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  modalFooter: {
-    flexDirection: 'row',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-  },
-  clearButton: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: '#F3F4F6',
-    marginRight: 8,
-    alignItems: 'center',
-  },
-  clearButtonText: {
-    fontSize: 16,
-    color: '#6B7280',
-    fontWeight: '600',
-  },
-
-  // Sort Modal Styles
-  sortModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  sortModalContainer: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingBottom: 32,
-  },
-  sortModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  sortModalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  sortOptions: {
-    padding: 16,
-  },
-  sortSectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 12,
-  },
-  sortOption: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  sortOptionSelected: {
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1,
-    borderColor: '#3B82F6',
-  },
-  sortOptionText: {
-    fontSize: 16,
-    color: '#374151',
-  },
-  sortOptionTextSelected: {
-    color: '#3B82F6',
-    fontWeight: '600',
-  },
-  sortApplyButton: {
-    marginHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: '#3B82F6',
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  sortApplyButtonText: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-});
