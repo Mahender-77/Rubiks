@@ -1,12 +1,25 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  useColorScheme,
+} from 'react-native';
 import { useRouter } from 'expo-router';
-import { Clock, CheckCircle, XCircle, AlertCircle, Building } from 'lucide-react-native';
+import {
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  Building,
+} from 'lucide-react-native';
 import { JobApplication } from '../../types/job';
-
+import Colors from '../../constants/Colors';
 
 export function RecentApplications() {
   const router = useRouter();
+  const colorScheme = useColorScheme() ?? 'light';
 
   // Mock application data - in real app, this would come from API
   const recentApplications: JobApplication[] = [
@@ -24,13 +37,23 @@ export function RecentApplications() {
         location: 'New York, NY',
         type: 'full-time',
         salary: { min: 80000, max: 120000, currency: 'USD' },
-        description: 'We are looking for an experienced React Native developer...',
+        description:
+          'We are looking for an experienced React Native developer...',
         requirements: ['React Native', 'TypeScript', '3+ years experience'],
-        responsibilities: ['Develop mobile apps', 'Code review', 'Mentor junior developers'],
+        responsibilities: [
+          'Develop mobile apps',
+          'Code review',
+          'Mentor junior developers',
+        ],
         benefits: ['Health insurance', 'Remote work', 'Stock options'],
-        skills: ['React Native', 'TypeScript', 'JavaScript', 'Mobile Development'],
+        skills: [
+          'React Native',
+          'TypeScript',
+          'JavaScript',
+          'Mobile Development',
+        ],
         experience: '3-5 years',
-        education: 'Bachelor\'s degree',
+        education: "Bachelor's degree",
         postedDate: '2024-01-15',
         isActive: true,
         applications: 45,
@@ -53,11 +76,15 @@ export function RecentApplications() {
         salary: { min: 90000, max: 140000, currency: 'USD' },
         description: 'Join our fast-growing startup...',
         requirements: ['Node.js', 'React', 'MongoDB', '2+ years experience'],
-        responsibilities: ['Full stack development', 'Database design', 'API development'],
+        responsibilities: [
+          'Full stack development',
+          'Database design',
+          'API development',
+        ],
         benefits: ['Flexible hours', 'Unlimited PTO', 'Learning budget'],
         skills: ['Node.js', 'React', 'MongoDB', 'JavaScript'],
         experience: '2-4 years',
-        education: 'Bachelor\'s degree',
+        education: "Bachelor's degree",
         postedDate: '2024-01-14',
         isActive: true,
         applications: 32,
@@ -79,10 +106,20 @@ export function RecentApplications() {
         type: 'contract',
         salary: { min: 60000, max: 90000, currency: 'USD' },
         description: 'Create beautiful and intuitive user experiences...',
-        requirements: ['Figma', 'Adobe Creative Suite', 'Portfolio', '2+ years experience'],
+        requirements: [
+          'Figma',
+          'Adobe Creative Suite',
+          'Portfolio',
+          '2+ years experience',
+        ],
         responsibilities: ['Design interfaces', 'User research', 'Prototyping'],
         benefits: ['Remote work', 'Flexible schedule', 'Creative freedom'],
-        skills: ['Figma', 'Adobe Creative Suite', 'UI/UX Design', 'Prototyping'],
+        skills: [
+          'Figma',
+          'Adobe Creative Suite',
+          'UI/UX Design',
+          'Prototyping',
+        ],
         experience: '2-3 years',
         education: 'Design degree preferred',
         postedDate: '2024-01-13',
@@ -94,46 +131,56 @@ export function RecentApplications() {
   ];
 
   const getStatusIcon = (status: string) => {
+    const colorMap = {
+      applied: '#3B82F6',
+      reviewing: '#F59E0B',
+      shortlisted: '#10B981',
+      interview: '#8B5CF6',
+      rejected: '#EF4444',
+      accepted: '#10B981',
+    };
+    const iconColor = colorMap[status] || '#6B7280';
+
     switch (status) {
       case 'applied':
-        return <Clock size={16} color="#3B82F6" />;
+        return <Clock size={16} color={iconColor} />;
       case 'reviewing':
-        return <AlertCircle size={16} color="#F59E0B" />;
+        return <AlertCircle size={16} color={iconColor} />;
       case 'shortlisted':
-        return <CheckCircle size={16} color="#10B981" />;
+        return <CheckCircle size={16} color={iconColor} />;
       case 'interview':
-        return <AlertCircle size={16} color="#8B5CF6" />;
+        return <AlertCircle size={16} color={iconColor} />;
       case 'rejected':
-        return <XCircle size={16} color="#EF4444" />;
+        return <XCircle size={16} color={iconColor} />;
       case 'accepted':
-        return <CheckCircle size={16} color="#10B981" />;
+        return <CheckCircle size={16} color={iconColor} />;
       default:
-        return <Clock size={16} color="#6B7280" />;
+        return <Clock size={16} color={iconColor} />;
     }
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'applied': return '#3B82F6';
-      case 'reviewing': return '#F59E0B';
-      case 'shortlisted': return '#10B981';
-      case 'interview': return '#8B5CF6';
-      case 'rejected': return '#EF4444';
-      case 'accepted': return '#10B981';
-      default: return '#6B7280';
-    }
+    const colorMap = {
+      applied: '#3B82F6',
+      reviewing: '#F59E0B',
+      shortlisted: '#10B981',
+      interview: '#8B5CF6',
+      rejected: '#EF4444',
+      accepted: '#10B981',
+    };
+    return colorMap[status] || '#6B7280';
   };
 
   const getStatusText = (status: string) => {
-    switch (status) {
-      case 'applied': return 'Applied';
-      case 'reviewing': return 'Under Review';
-      case 'shortlisted': return 'Shortlisted';
-      case 'interview': return 'Interview';
-      case 'rejected': return 'Not Selected';
-      case 'accepted': return 'Accepted';
-      default: return 'Applied';
-    }
+    const textMap = {
+      applied: 'Applied',
+      reviewing: 'Under Review',
+      shortlisted: 'Shortlisted',
+      interview: 'Interview',
+      rejected: 'Not Selected',
+      accepted: 'Accepted',
+    };
+    return textMap[status] || 'Applied';
   };
 
   const formatDate = (dateString: string) => {
@@ -141,18 +188,24 @@ export function RecentApplications() {
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 1) return '1 day ago';
     if (diffDays < 7) return `${diffDays} days ago`;
     return date.toLocaleDateString();
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Recent Applications</Text>
+        <Text style={[styles.title, { color: Colors[colorScheme].text }]}>
+          Recent Applications
+        </Text>
         <TouchableOpacity onPress={() => router.push('/applications')}>
-          <Text style={styles.seeAllText}>See all</Text>
+          <Text
+            style={[styles.seeAllText, { color: Colors[colorScheme].text }]}
+          >
+            See all
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -160,33 +213,86 @@ export function RecentApplications() {
         {recentApplications.map((application) => (
           <TouchableOpacity
             key={application.id}
-            style={styles.applicationCard}
+            style={[
+              styles.applicationCard,
+              {
+                backgroundColor: Colors[colorScheme].background,
+                borderColor: Colors[colorScheme].borderColor,
+              },
+            ]}
             onPress={() => router.push(`/applications/${application.id}`)}
           >
             <View style={styles.applicationHeader}>
               <View style={styles.companyInfo}>
-                <View style={styles.companyLogo}>
-                  <Building size={16} color="#6B7280" />
+                <View
+                  style={[
+                    styles.companyLogo,
+                    {
+                      backgroundColor: Colors[colorScheme].text,
+                    },
+                  ]}
+                >
+                  <Building size={16} color={Colors[colorScheme].darkText} />
                 </View>
                 <View style={styles.jobInfo}>
-                  <Text style={styles.jobTitle}>{application.job.title}</Text>
-                  <Text style={styles.companyName}>{application.job.company}</Text>
+                  <Text
+                    style={[
+                      styles.jobTitle,
+                      { color: Colors[colorScheme].text },
+                    ]}
+                  >
+                    {application.job.title}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.companyName,
+                      {
+                        color: Colors[colorScheme].text,
+                      },
+                    ]}
+                  >
+                    {application.job.company}
+                  </Text>
                 </View>
               </View>
               <View style={styles.statusContainer}>
                 {getStatusIcon(application.status)}
-                <Text style={[styles.statusText, { color: getStatusColor(application.status) }]}>
+                <Text
+                  style={[
+                    styles.statusText,
+                    { color: getStatusColor(application.status) },
+                  ]}
+                >
                   {getStatusText(application.status)}
                 </Text>
               </View>
             </View>
 
             <View style={styles.applicationFooter}>
-              <Text style={styles.appliedDate}>
+              <Text
+                style={[
+                  styles.appliedDate,
+                  { color: Colors[colorScheme].text },
+                ]}
+              >
                 Applied {formatDate(application.appliedDate)}
               </Text>
-              <TouchableOpacity style={styles.viewButton}>
-                <Text style={styles.viewButtonText}>View</Text>
+              <TouchableOpacity
+                style={[
+                  styles.viewButton,
+                  {
+                    backgroundColor: Colors[colorScheme].text,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.viewButtonText,
+                    { color: Colors[colorScheme].darkText },
+                  ]}
+                >
+                  View
+                </Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
@@ -210,29 +316,24 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#111827',
   },
   seeAllText: {
     fontSize: 14,
-    color: '#3B82F6',
     fontWeight: '500',
   },
   applicationsList: {
     paddingHorizontal: 20,
   },
   applicationCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
-    elevation: 2,
+    elevation: 3,
+    borderWidth: 1,
   },
   applicationHeader: {
     flexDirection: 'row',
@@ -249,7 +350,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 6,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -260,12 +360,10 @@ const styles = StyleSheet.create({
   jobTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
     marginBottom: 2,
   },
   companyName: {
     fontSize: 14,
-    color: '#6B7280',
   },
   statusContainer: {
     flexDirection: 'row',
@@ -283,10 +381,8 @@ const styles = StyleSheet.create({
   },
   appliedDate: {
     fontSize: 12,
-    color: '#6B7280',
   },
   viewButton: {
-    backgroundColor: '#F3F4F6',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
@@ -294,6 +390,5 @@ const styles = StyleSheet.create({
   viewButtonText: {
     fontSize: 12,
     fontWeight: '500',
-    color: '#374151',
   },
 });
