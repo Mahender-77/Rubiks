@@ -5,9 +5,9 @@ export interface IJob extends Document {
   title: string;
   company: string;
   location: string;
-  type: "full-time" | "part-time" | "contract" | "internship";
+  type: "full-time" | "part-time" | "contract" | "internship" | "freelance";
   salary: {
-    min: number;   // ✅ should be number, not { type: Number }
+    min: number; // ✅ should be number, not { type: Number }
     max: number;
     currency: string;
     salaryType: "monthly" | "yearly"; // ✅ matches schema enum
@@ -32,7 +32,7 @@ const JobSchema: Schema<IJob> = new Schema(
     location: { type: String, required: true },
     type: {
       type: String,
-      enum: ["full-time", "part-time", "contract", "internship"],
+      enum: ["full-time", "part-time", "contract", "internship", "freelance"],
       required: true,
     },
     salary: {

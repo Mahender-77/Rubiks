@@ -68,6 +68,7 @@ export default function JobsAdmin() {
     { label: 'Part Time', value: 'part-time' },
     { label: 'Contract', value: 'contract' },
     { label: 'Internship', value: 'internship' },
+    { label: 'Freelance', value: 'freelance' },
   ];
 
   const currencies = [
@@ -187,30 +188,38 @@ export default function JobsAdmin() {
       console.error('Failed to delete job:', err);
     }
   };
-const handleEdit = (job: any) => {
-  setShowEditModel(true);
-  setEditJob([
-    {
-      id: job._id, // Make sure to include the job ID
-      title: job.title,
-      company: job.company,
-      location: job.location,
-      type: job.type,
-      salaryMin: job.salary?.min || '',
-      salaryMax: job.salary?.max || '',
-      currency: job.salary?.currency || 'USD',
-      salaryPeriod: job.salary?.salaryType || 'yearly',
-      description: job.description,
-      requirements: Array.isArray(job.requirements) ? job.requirements.join(', ') : job.requirements || '',
-      responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities.join(', ') : job.responsibilities || '',
-      benefits: Array.isArray(job.benefits) ? job.benefits.join(', ') : job.benefits || '',
-      skills: Array.isArray(job.skills) ? job.skills.join(', ') : job.skills || '',
-      experience: job.experience,
-      education: job.education,
-      isActive: job.isActive,
-    },
-  ]);
-};
+  const handleEdit = (job: any) => {
+    setShowEditModel(true);
+    setEditJob([
+      {
+        id: job._id, // Make sure to include the job ID
+        title: job.title,
+        company: job.company,
+        location: job.location,
+        type: job.type,
+        salaryMin: job.salary?.min || '',
+        salaryMax: job.salary?.max || '',
+        currency: job.salary?.currency || 'USD',
+        salaryPeriod: job.salary?.salaryType || 'yearly',
+        description: job.description,
+        requirements: Array.isArray(job.requirements)
+          ? job.requirements.join(', ')
+          : job.requirements || '',
+        responsibilities: Array.isArray(job.responsibilities)
+          ? job.responsibilities.join(', ')
+          : job.responsibilities || '',
+        benefits: Array.isArray(job.benefits)
+          ? job.benefits.join(', ')
+          : job.benefits || '',
+        skills: Array.isArray(job.skills)
+          ? job.skills.join(', ')
+          : job.skills || '',
+        experience: job.experience,
+        education: job.education,
+        isActive: job.isActive,
+      },
+    ]);
+  };
 
   // Custom Dropdown Component
   const CustomDropdown = ({
@@ -524,23 +533,23 @@ const handleEdit = (job: any) => {
           setJobDetails={setJobDetails}
         />
       )}
-{showEditModel && (
-  <JobEdit
-    showEditModel={showEditModel}
-    setShowEditModel={setShowEditModel}
-    editJob={editJob[0]}
-    CustomDropdown={CustomDropdown}
-    setEditJob={setEditJob}
-    setShowJobTypeDropdown={setShowJobTypeDropdown}
-    setShowCurrencyDropdown={setShowCurrencyDropdown}
-    setShowSalaryPeriodDropdown={setShowSalaryPeriodDropdown}
-    showJobTypeDropdown={showJobTypeDropdown}
-    showCurrencyDropdown={showCurrencyDropdown}
-    showSalaryPeriodDropdown={showSalaryPeriodDropdown}
-    fetchJobs={fetchJobs}
-    jobId={editJob[0]?.id || editJob[0]?._id} // Pass the job ID
-  />
-)}
+      {showEditModel && (
+        <JobEdit
+          showEditModel={showEditModel}
+          setShowEditModel={setShowEditModel}
+          editJob={editJob[0]}
+          CustomDropdown={CustomDropdown}
+          setEditJob={setEditJob}
+          setShowJobTypeDropdown={setShowJobTypeDropdown}
+          setShowCurrencyDropdown={setShowCurrencyDropdown}
+          setShowSalaryPeriodDropdown={setShowSalaryPeriodDropdown}
+          showJobTypeDropdown={showJobTypeDropdown}
+          showCurrencyDropdown={showCurrencyDropdown}
+          showSalaryPeriodDropdown={showSalaryPeriodDropdown}
+          fetchJobs={fetchJobs}
+          jobId={editJob[0]?.id || editJob[0]?._id} // Pass the job ID
+        />
+      )}
     </ScrollView>
   );
 }
@@ -704,7 +713,7 @@ const styles = StyleSheet.create({
     borderColor: '#e9ecef',
     borderRadius: 10,
     zIndex: 1000,
-    maxHeight: 200,
+    maxHeight: 300,
   },
   dropdownOption: {
     padding: 12,
