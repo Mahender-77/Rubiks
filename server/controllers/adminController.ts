@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 
 import News from "../models/News.js";
-import Jobs from "../models/Jobs.js";
+import Jobs from "../models/Jobs";
 
 export const createJob = async (
   req: Request,
