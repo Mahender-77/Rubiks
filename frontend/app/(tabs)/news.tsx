@@ -359,14 +359,14 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   View,
   Text,
-  ImageBackground,
+  Image,
   TouchableOpacity,
   StyleSheet,
   Share,
   Alert,
   Dimensions,
   PanResponder,
-  Image,
+  useColorScheme,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import {
@@ -380,8 +380,9 @@ import {
   FileText,
 } from "lucide-react-native";
 import { getNews } from "../../utils/api";
+import Colors from "../../constants/Colors";
 
-const { height, width } = Dimensions.get("window");
+const { height } = Dimensions.get("window");
 
 interface NewsItem {
   id: string;
@@ -420,19 +421,23 @@ interface ApiNewsItem {
   tags?: string[];
   isActive?: boolean;
 }
+
 export default function JobNewsApp() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [bookmarkedItems, setBookmarkedItems] = useState(new Set<string>());
   const [likedItems, setLikedItems] = useState(new Set<string>());
   const [newsData, setNewsData] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // ---- Refs to avoid stale closures ----
-  const currentIndexRef = useRef<number>(currentIndex);
-  const newsDataRef = useRef<NewsItem[]>(newsData);
-  const isHandlingSwipe = useRef<boolean>(false);
-
   const [expanded, setExpanded] = useState(false);
+
+  const colorScheme = useColorScheme() ?? "light";
+  const theme = Colors[colorScheme];
+
+  // ---- Refs ----
+  const currentIndexRef = useRef(currentIndex);
+  const newsDataRef = useRef(newsData);
+  const isHandlingSwipe = useRef(false);
+
   useEffect(() => {
     currentIndexRef.current = currentIndex;
   }, [currentIndex]);
@@ -445,7 +450,6 @@ export default function JobNewsApp() {
 
   const formatTimestamp = (dateString?: string): string => {
     if (!dateString) return "Recently";
-
     const now = new Date();
     const date = new Date(dateString);
     const diffInMs = now.getTime() - date.getTime();
@@ -465,7 +469,7 @@ export default function JobNewsApp() {
     try {
       setLoading(true);
       const res: ApiNewsItem[] = await getNews();
-      const transformedNews: NewsItem[] = res.map((item: ApiNewsItem) => ({
+      const transformedNews: NewsItem[] = res.map((item) => ({
         id: item.id || item._id,
         category:
           item.category?.charAt(0).toUpperCase() +
@@ -488,7 +492,7 @@ export default function JobNewsApp() {
       }));
 
       setNewsData(transformedNews);
-      setCurrentIndex(0); // show first item after refresh
+      setCurrentIndex(0);
     } catch (error) {
       console.error("Error fetching news:", error);
       setNewsData([]);
@@ -501,7 +505,6 @@ export default function JobNewsApp() {
     fetchNews();
   }, []);
 
-  // ---- Handlers that always consult refs ----
   const handleNext = useCallback(() => {
     setCurrentIndex((prev) => {
       const len = newsDataRef.current.length;
@@ -518,32 +521,26 @@ export default function JobNewsApp() {
     });
   }, []);
 
-  // ---- PanResponder defined after handlers so it can call them ----
   const panResponder = useRef(
     PanResponder.create({
-      // don't block simple taps immediately; only start when user moves finger
       onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (e, gesture) => {
         const { dx, dy } = gesture;
-        // only capture when vertical movement is notable and greater than horizontal movement
         return Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx);
       },
       onPanResponderRelease: (e, gesture) => {
         const { dy } = gesture;
-        // simple guard so we don't run multiple transitions in quick succession
         if (isHandlingSwipe.current) return;
         if (Math.abs(dy) < 20) return;
 
         isHandlingSwipe.current = true;
         setTimeout(() => {
           isHandlingSwipe.current = false;
-        }, 300); // small debounce
+        }, 300);
 
         if (dy < -50) {
-          // swipe UP -> next
           handleNext();
         } else if (dy > 50) {
-          // swipe DOWN -> previous, unless first item -> refresh
           if (currentIndexRef.current === 0) {
             fetchNews();
           } else {
@@ -557,22 +554,18 @@ export default function JobNewsApp() {
   const handleBookmark = () => {
     if (!currentNews) return;
     const updated = new Set(bookmarkedItems);
-    if (updated.has(currentNews.id)) {
-      updated.delete(currentNews.id);
-    } else {
-      updated.add(currentNews.id);
-    }
+    updated.has(currentNews.id)
+      ? updated.delete(currentNews.id)
+      : updated.add(currentNews.id);
     setBookmarkedItems(updated);
   };
 
   const handleLike = () => {
     if (!currentNews) return;
     const updated = new Set(likedItems);
-    if (updated.has(currentNews.id)) {
-      updated.delete(currentNews.id);
-    } else {
-      updated.add(currentNews.id);
-    }
+    updated.has(currentNews.id)
+      ? updated.delete(currentNews.id)
+      : updated.add(currentNews.id);
     setLikedItems(updated);
   };
 
@@ -590,42 +583,48 @@ export default function JobNewsApp() {
     }
   };
 
-  const getCategoryColor = (category) => {
-    const colors = {
-      "Tech Jobs": "#87CEEB",
-      "Remote Work": "#ADD8E6",
-      "Startup News": "#B0E0E6",
-      "Career Growth": "#87CEFA",
-      "Salary Trends": "#87CEEB",
-      "Job Market": "#ADD8E6",
-      "Skills Training": "#B0E0E6",
-      Freelancing: "#87CEFA",
-    };
-    return colors[category] || "#87CEEB";
-  };
-
-  const formatNumber = (num) => {
+  const formatNumber = (num?: number) => {
+    if (!num) return "0";
     if (num >= 1000) return (num / 1000).toFixed(1) + "K";
-    return num?.toString?.() || "0";
+    return num.toString();
   };
 
-  // Loading state
   if (loading) {
     return (
-      <View style={[styles.container, styles.centered]}>
-        <Text style={styles.loadingText}>Loading news...</Text>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: theme.background },
+          styles.centered,
+        ]}
+      >
+        <Text style={[styles.loadingText, { color: theme.tint }]}>
+          Loading news...
+        </Text>
       </View>
     );
   }
 
-  // No data state
   if (!newsData.length) {
     return (
-      <View style={[styles.container, styles.centered]}>
-        <FileText color="#87CEEB" size={48} />
-        <Text style={styles.noDataText}>No news available</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchNews}>
-          <Text style={styles.retryText}>Retry</Text>
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: theme.background },
+          styles.centered,
+        ]}
+      >
+        <FileText color={theme.tint} size={48} />
+        <Text style={[styles.noDataText, { color: theme.subText }]}>
+          No news available
+        </Text>
+        <TouchableOpacity
+          style={[styles.retryButton, { backgroundColor: theme.button }]}
+          onPress={fetchNews}
+        >
+          <Text style={[styles.retryText, { color: theme.buttonText }]}>
+            Retry
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -633,7 +632,7 @@ export default function JobNewsApp() {
 
   if (!currentNews) return null;
 
-  const isValidImageUrl = (url: string | null): boolean => {
+  const isValidImageUrl = (url: string | null) => {
     if (!url) return false;
     try {
       new URL(url);
@@ -644,92 +643,95 @@ export default function JobNewsApp() {
   };
 
   return (
-    // attach panHandlers to the root view (so swipe anywhere)
-    <View style={styles.container} {...panResponder.panHandlers}>
-      {/* Image Section - Top Half */}
+    <View
+      style={[styles.container, { backgroundColor: theme.background }]}
+      {...panResponder.panHandlers}
+    >
+      {/* Image Section */}
       <View style={styles.imageSection}>
         {currentNews.imageUrl && isValidImageUrl(currentNews.imageUrl) ? (
           <Image
             source={{ uri: currentNews.imageUrl }}
             style={styles.newsImage}
             resizeMode="cover"
-            onError={() => {
-              const updatedNews = [...newsData];
-              updatedNews[currentIndex] = {
-                ...updatedNews[currentIndex],
-                imageUrl: null,
-              };
-              setNewsData(updatedNews);
-            }}
           />
         ) : (
-          <View style={styles.noImageContainer}>
-            <FileText color="#87CEEB" size={64} />
-            <Text style={styles.noImageText}>No Image</Text>
+          <View
+            style={[
+              styles.noImageContainer,
+              { backgroundColor: theme.cardBackGround },
+            ]}
+          >
+            <FileText color={theme.tint} size={64} />
+            <Text style={[styles.noImageText, { color: theme.tint }]}>
+              No Image
+            </Text>
           </View>
         )}
-        {/* Header overlay on image */}
+
+        {/* Overlay */}
         <View style={styles.headerOverlay}>
           <View style={styles.header}>
             <View style={styles.headerLeft}>
-              <View style={styles.iconCircle}>
-                <Briefcase color="#fff" size={20} />
+              <View
+                style={[
+                  styles.iconCircle,
+                  { backgroundColor: theme.tint },
+                ]}
+              >
+                <Briefcase color={theme.darkText} size={20} />
               </View>
               <View>
-                <Text style={styles.headerTitle}>JobNews</Text>
-                <Text style={styles.headerSubtitle}>
+                <Text style={[styles.headerTitle, { color: theme.card }]}>
+                  JobNews
+                </Text>
+                <Text
+                  style={[styles.headerSubtitle, { color: theme.subText }]}
+                >
                   {currentNews.timestamp}
                 </Text>
               </View>
             </View>
-            <View style={{ alignItems: "flex-end" }}>
-              <Text style={styles.headerSubtitle}>
-                {formatNumber(currentNews.views)} views
-              </Text>
-            </View>
+            <Text style={[styles.headerSubtitle, { color: theme.subText }]}>
+              {formatNumber(currentNews.views)} views
+            </Text>
           </View>
-        </View>
-
-        {/* Category Badge */}
-        <View
-          style={[
-            styles.categoryBadge,
-            { backgroundColor: getCategoryColor(currentNews.category) },
-          ]}
-        >
-          <Text style={styles.categoryText}>
-            {currentNews.category.toUpperCase()}
-          </Text>
         </View>
       </View>
 
-      {/* Content Section - Bottom Half */}
-      <View style={styles.contentSection}>
-        <View style={styles.content}>
-          <Text style={styles.title}>{currentNews.title}</Text>
-          <Text
-        style={styles.summary}
-        numberOfLines={expanded ? undefined : 5} // Limit to 3 lines when not expanded
+      {/* Content Section */}
+      <View
+        style={[styles.contentSection, { backgroundColor: theme.cardBackGround }]}
       >
-        {currentNews.summary}
-      </Text>
-      {currentNews.summary.length > 100 && ( // show "Read more" only if content is long
-        <TouchableOpacity onPress={() => setExpanded(!expanded)}>
-          <Text style={styles.readMore}>
-            {expanded ? "Read less" : "... Read more"}
+        <View style={styles.content}>
+          <Text style={[styles.title, { color: theme.text }]}>
+            {currentNews.title}
           </Text>
-        </TouchableOpacity>
-      )}
+          <Text
+            style={[styles.summary, { color: theme.subText }]}
+            numberOfLines={expanded ? undefined : 5}
+          >
+            {currentNews.summary}
+          </Text>
+          {currentNews.summary.length > 100 && (
+            <TouchableOpacity onPress={() => setExpanded(!expanded)}>
+              <Text style={[styles.readMore, { color: theme.tint }]}>
+                {expanded ? "Read less" : "... Read more"}
+              </Text>
+            </TouchableOpacity>
+          )}
 
           {/* Meta */}
           <View style={styles.meta}>
             <View style={styles.metaItem}>
-              <Clock color="#87CEEB" size={14} />
-              <Text style={styles.metaText}>{currentNews.readTime}</Text>
+              <Clock color={theme.tint} size={14} />
+              <Text style={[styles.metaText, { color: theme.tint }]}>
+                {currentNews.readTime}
+              </Text>
             </View>
             <View style={styles.metaItem}>
-              <Heart color="#87CEEB" size={14} />
-              <Text style={styles.metaText}>
+              <Heart color={theme.tint} size={14} />
+              <Text style={[styles.metaText, { color: theme.tint }]}>
                 {formatNumber(currentNews.likes)} likes
               </Text>
             </View>
@@ -741,44 +743,72 @@ export default function JobNewsApp() {
               <TouchableOpacity
                 style={[
                   styles.actionButton,
-                  likedItems.has(currentNews.id) && styles.actionButtonActive,
+                  { borderColor: theme.borderColor },
+                  likedItems.has(currentNews.id) && {
+                    backgroundColor: theme.tint,
+                  },
                 ]}
                 onPress={handleLike}
               >
                 <Heart
-                  color={likedItems.has(currentNews.id) ? "#fff" : "#87CEEB"}
-                  fill={likedItems.has(currentNews.id) ? "#fff" : "none"}
+                  color={
+                    likedItems.has(currentNews.id) ? theme.buttonText : theme.tint
+                  }
+                  fill={likedItems.has(currentNews.id) ? theme.buttonText : "none"}
                   size={20}
                 />
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
                   styles.actionButton,
-                  bookmarkedItems.has(currentNews.id) &&
-                    styles.actionButtonActive,
+                  { borderColor: theme.borderColor },
+                  bookmarkedItems.has(currentNews.id) && {
+                    backgroundColor: theme.tint,
+                  },
                 ]}
                 onPress={handleBookmark}
               >
                 <Bookmark
                   color={
-                    bookmarkedItems.has(currentNews.id) ? "#fff" : "#87CEEB"
+                    bookmarkedItems.has(currentNews.id)
+                      ? theme.buttonText
+                      : theme.tint
                   }
-                  fill={bookmarkedItems.has(currentNews.id) ? "#fff" : "none"}
+                  fill={
+                    bookmarkedItems.has(currentNews.id)
+                      ? theme.buttonText
+                      : "none"
+                  }
                   size={20}
                 />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
-                <ShareIcon color="#87CEEB" size={20} />
+              <TouchableOpacity
+                style={[styles.actionButton, { borderColor: theme.borderColor }]}
+                onPress={handleShare}
+              >
+                <ShareIcon color={theme.tint} size={20} />
               </TouchableOpacity>
             </View>
 
-            {/* Navigation */}
+            {/* Nav */}
             <View style={styles.navButtons}>
-              <TouchableOpacity style={styles.navButton} onPress={handlePrevious}>
-                <ChevronUp color="#87CEEB" size={16} />
+              <TouchableOpacity
+                style={[
+                  styles.navButton,
+                  { borderColor: theme.borderColor },
+                ]}
+                onPress={handlePrevious}
+              >
+                <ChevronUp color={theme.tint} size={16} />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.navButton} onPress={handleNext}>
-                <ChevronDown color="#87CEEB" size={16} />
+              <TouchableOpacity
+                style={[
+                  styles.navButton,
+                  { borderColor: theme.borderColor },
+                ]}
+                onPress={handleNext}
+              >
+                <ChevronDown color={theme.tint} size={16} />
               </TouchableOpacity>
             </View>
           </View>
@@ -789,20 +819,15 @@ export default function JobNewsApp() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
+  container: { flex: 1 },
+  centered: { justifyContent: "center", alignItems: "center" },
 
-  // Image Section Styles
   imageSection: {
     height: height * 0.5,
-    position: "relative",
+    position: "relative" as const,
   },
-  newsImage: {
-    width: "100%",
-    height: "100%",
-  },
+  newsImage: { width: "100%", height: "100%" },
+
   headerOverlay: {
     position: "absolute",
     top: 0,
@@ -818,167 +843,56 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  headerLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
+  headerLeft: { flexDirection: "row", alignItems: "center" },
   iconCircle: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#87CEEB",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
   },
-  headerTitle: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  headerSubtitle: {
-    color: "#E6F3FF",
-    fontSize: 12,
-  },
-  categoryBadge: {
-    position: "absolute",
-    bottom: 16,
-    left: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  categoryText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
-  },
+  headerTitle: { fontWeight: "bold", fontSize: 16 },
+  headerSubtitle: { fontSize: 12 },
 
-  // Content Section Styles
-  contentSection: {
-    flex: 1,
-    backgroundColor: "#fff",
-  },
-  content: {
-    flex: 1,
-    padding: 20,
-    justifyContent: "space-between",
-  },
-  centered: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  title: {
-    color: "#2C3E50",
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 12,
-    lineHeight: 30,
-  },
-  loadingText: {
-    fontSize: 18,
-    color: "#87CEEB",
-    fontWeight: "500",
-  },
-summary: {
-  color: "#5D6D7E",
-  fontSize: 16,
-  lineHeight: 22,
-  marginBottom: 8,
-},
-readMore: {
-  color: "#87CEEB",
-  fontSize: 14,
-  fontWeight: "600",
-  marginTop: -8,
-},
+  contentSection: { flex: 1 },
+  content: { flex: 1, padding: 20, justifyContent: "space-between" },
 
-  meta: {
-    flexDirection: "row",
-    marginBottom: 20,
-  },
-  metaItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 20,
-  },
-  metaText: {
-    color: "#87CEEB",
-    fontSize: 14,
-    marginLeft: 6,
-    fontWeight: "500",
-  },
-  noImageContainer: {
-    width: "100%",
-    height: "100%",
-    backgroundColor: "#F8F9FA",
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  title: { fontSize: 24, fontWeight: "bold", marginBottom: 12, lineHeight: 30 },
+  summary: { fontSize: 16, lineHeight: 22, marginBottom: 8 },
+  readMore: { fontSize: 14, fontWeight: "600", marginTop: -8 },
 
-  noImageText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: "#87CEEB",
-    fontWeight: "500",
-  },
+  meta: { flexDirection: "row", marginBottom: 20 },
+  metaItem: { flexDirection: "row", alignItems: "center", marginRight: 20 },
+  metaText: { fontSize: 14, marginLeft: 6, fontWeight: "500" },
+
   actions: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: "#F0F8FF",
   },
-  actionLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
+  actionLeft: { flexDirection: "row", alignItems: "center" },
   actionButton: {
     padding: 12,
     borderRadius: 25,
-    backgroundColor: "#F0F8FF",
     marginRight: 12,
     borderWidth: 1,
-    borderColor: "#E6F3FF",
   },
-  actionButtonActive: {
-    backgroundColor: "#87CEEB",
-  },
-  navButtons: {
-    alignItems: "center",
-  },
-  noDataText: {
-    fontSize: 18,
-    color: "#5D6D7E",
-    fontWeight: "500",
-    marginTop: 16,
-    marginBottom: 20,
-  },
-
-  retryButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    backgroundColor: "#87CEEB",
-    borderRadius: 25,
-  },
-
-  retryText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
+  navButtons: { alignItems: "center" },
   navButton: {
     padding: 8,
     borderRadius: 20,
-    backgroundColor: "#F0F8FF",
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: "#E6F3FF",
   },
+
+  loadingText: { fontSize: 18, fontWeight: "500" },
+  noDataText: { fontSize: 18, fontWeight: "500", marginTop: 16, marginBottom: 20 },
+  retryButton: { paddingHorizontal: 24, paddingVertical: 12, borderRadius: 25 },
+  retryText: { fontSize: 16, fontWeight: "600" },
+
+  noImageContainer: { width: "100%", height: "100%", justifyContent: "center", alignItems: "center" },
+  noImageText: { marginTop: 12, fontSize: 16, fontWeight: "500" },
 });
