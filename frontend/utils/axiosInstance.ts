@@ -11,7 +11,10 @@ type ExtraConfig = {
 // Debug logging
 console.log('=== AXIOS CONFIGURATION ===');
 console.log('Platform:', Platform.OS);
-console.log('Environment EXPO_PUBLIC_API_BASE_URL:', process.env.EXPO_PUBLIC_API_BASE_URL);
+console.log(
+  'Environment EXPO_PUBLIC_API_BASE_URL:',
+  process.env.EXPO_PUBLIC_API_BASE_URL
+);
 console.log('Constants.expoConfig?.extra:', Constants.expoConfig?.extra);
 console.log('__DEV__:', __DEV__);
 
@@ -19,13 +22,19 @@ console.log('__DEV__:', __DEV__);
 const getApiBaseUrl = (): string => {
   // Try environment variable first (from EAS build)
   if (process.env.EXPO_PUBLIC_API_BASE_URL) {
-    console.log('Using environment variable:', process.env.EXPO_PUBLIC_API_BASE_URL);
+    console.log(
+      'Using environment variable:',
+      process.env.EXPO_PUBLIC_API_BASE_URL
+    );
     return process.env.EXPO_PUBLIC_API_BASE_URL;
   }
 
   // Try Constants.expoConfig.extra (from app.json)
   if (Constants.expoConfig?.extra?.API_BASE_URL) {
-    console.log('Using expoConfig.extra:', Constants.expoConfig.extra.API_BASE_URL);
+    console.log(
+      'Using expoConfig.extra:',
+      Constants.expoConfig.extra.API_BASE_URL
+    );
     return Constants.expoConfig.extra.API_BASE_URL;
   }
 
@@ -42,7 +51,7 @@ const getApiBaseUrl = (): string => {
 };
 
 // const API_BASE_URL = getApiBaseUrl();
-const API_BASE_URL ='http://192.168.1.107:5001/api' ;
+const API_BASE_URL = 'http://145.223.21.150:5001/api';
 
 console.log('Final API_BASE_URL:', API_BASE_URL);
 console.log('============================');
@@ -53,7 +62,7 @@ const axiosInstance = axios.create({
   timeout: 15000, // Increased timeout for production
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    Accept: 'application/json',
   },
 });
 
@@ -97,14 +106,14 @@ axiosInstance.interceptors.response.use(
   },
   async (error) => {
     const fullUrl = error.config ? getFullUrl(error.config) : 'unknown';
-    
+
     console.error('❌ API Error:', {
       message: error.message,
       code: error.code,
       status: error.response?.status,
       statusText: error.response?.statusText,
       url: fullUrl,
-      data: error.response?.data
+      data: error.response?.data,
     });
 
     // Handle 401 - Token expired
@@ -119,11 +128,15 @@ axiosInstance.interceptors.response.use(
 
     // Handle network errors
     if (!error.response) {
-      if (error.code === 'NETWORK_ERROR' || error.message?.includes('Network Error')) {
+      if (
+        error.code === 'NETWORK_ERROR' ||
+        error.message?.includes('Network Error')
+      ) {
         console.error('🌐 Network error detected');
         throw {
           success: false,
-          message: 'Network error. Please check your internet connection and try again.',
+          message:
+            'Network error. Please check your internet connection and try again.',
         };
       }
 
@@ -135,11 +148,15 @@ axiosInstance.interceptors.response.use(
         };
       }
 
-      if (error.code === 'ECONNREFUSED' || error.message?.includes('Connection refused')) {
+      if (
+        error.code === 'ECONNREFUSED' ||
+        error.message?.includes('Connection refused')
+      ) {
         console.error('🚫 Connection refused');
         throw {
           success: false,
-          message: 'Cannot connect to server. Please check if the server is running.',
+          message:
+            'Cannot connect to server. Please check if the server is running.',
         };
       }
 
@@ -169,7 +186,8 @@ axiosInstance.interceptors.response.use(
       case 403:
         throw {
           success: false,
-          message: data?.message || 'Access denied. You do not have permission.',
+          message:
+            data?.message || 'Access denied. You do not have permission.',
         };
       case 404:
         throw {
@@ -179,7 +197,8 @@ axiosInstance.interceptors.response.use(
       case 422:
         throw {
           success: false,
-          message: data?.message || 'Validation failed. Please check your input.',
+          message:
+            data?.message || 'Validation failed. Please check your input.',
           errors: data?.errors,
         };
       case 429:

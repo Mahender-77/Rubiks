@@ -22,13 +22,13 @@ export default function TabLayout() {
 
   // Don't redirect while still loading
   if (isLoading) {
-    console.log("⏳ TabsLayout: Still loading, not redirecting yet");
+
     return null; // Let parent handle loading
   }
 
   // Redirect if not authenticated
   if (!isAuthenticated || !user) {
-    console.log("🔒 TabsLayout: Not authenticated, redirecting to login");
+  
     return <Redirect href="/(auth)/login" />;
   }
 
@@ -49,8 +49,8 @@ export default function TabLayout() {
 
       <Tabs
         screenOptions={{
-          tabBarActiveTintColor: '#0EA5E9',
-          tabBarInactiveTintColor: '#64748B',
+          tabBarActiveTintColor: '#000000',
+          tabBarInactiveTintColor: '#adb6c4ff',
           tabBarStyle: {
             backgroundColor: '#FFFFFF',
             borderTopWidth: 1,

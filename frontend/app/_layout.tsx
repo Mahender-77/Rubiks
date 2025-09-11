@@ -8,16 +8,6 @@ import { useEffect } from "react";
 function AppStack() {
   const { isLoading, isAuthenticated, user } = useAuth();
 
-  // useEffect(() => {
-  //   console.log("🏗️ AppStack: Current state:", {
-  //     isLoading,
-  //     isAuthenticated,
-  //     hasUser: !!user,
-  //     userRole: user?.role
-  //   });
-  // }, [isLoading, isAuthenticated, user]);
-
-  // Show loading screen while authentication is being restored/initialized
   if (isLoading) {
     return (
       <View style={{ 
@@ -26,7 +16,7 @@ function AppStack() {
         alignItems: "center",
         backgroundColor: "#ffffff"
       }}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color="#353535ff" />
         <Text style={{ 
           marginTop: 16, 
           fontSize: 18, 

@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#0EA5E9',
+    color: '#000000',
   },
   centerSection: {
     flex: 2,
