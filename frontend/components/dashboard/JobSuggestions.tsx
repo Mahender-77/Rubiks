@@ -1,13 +1,27 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  useColorScheme,
+} from 'react-native';
 import { useRouter } from 'expo-router';
-import { Briefcase, MapPin, DollarSign, Clock, Building } from 'lucide-react-native';
-import { Job } from "../../types/job";
+import {
+  Briefcase,
+  MapPin,
+  DollarSign,
+  Clock,
+  Building,
+} from 'lucide-react-native';
+import { Job } from '../../types/job';
+import Colors from '../../constants/Colors';
 
 export function JobSuggestions() {
   const router = useRouter();
+  const colorScheme = useColorScheme() ?? 'light';
 
-  // Mock job data
   const recommendedJobs: Job[] = [
     {
       id: '1',
@@ -16,13 +30,23 @@ export function JobSuggestions() {
       location: 'New York, NY',
       type: 'full-time',
       salary: { min: 80000, max: 120000, currency: 'USD' },
-      description: 'We are looking for an experienced React Native developer to join our mobile team...',
+      description:
+        'We are looking for an experienced React Native developer to join our mobile team...',
       requirements: ['React Native', 'TypeScript', '3+ years experience'],
-      responsibilities: ['Develop mobile apps', 'Code review', 'Mentor junior developers'],
+      responsibilities: [
+        'Develop mobile apps',
+        'Code review',
+        'Mentor junior developers',
+      ],
       benefits: ['Health insurance', 'Remote work', 'Stock options'],
-      skills: ['React Native', 'TypeScript', 'JavaScript', 'Mobile Development'],
+      skills: [
+        'React Native',
+        'TypeScript',
+        'JavaScript',
+        'Mobile Development',
+      ],
       experience: '3-5 years',
-      education: 'Bachelor\'s degree',
+      education: "Bachelor's degree",
       postedDate: '2024-01-15',
       isActive: true,
       applications: 45,
@@ -35,13 +59,18 @@ export function JobSuggestions() {
       location: 'San Francisco, CA',
       type: 'full-time',
       salary: { min: 90000, max: 140000, currency: 'USD' },
-      description: 'Join our fast-growing startup and help build the next big thing...',
+      description:
+        'Join our fast-growing startup and help build the next big thing...',
       requirements: ['Node.js', 'React', 'MongoDB', '2+ years experience'],
-      responsibilities: ['Full stack development', 'Database design', 'API development'],
+      responsibilities: [
+        'Full stack development',
+        'Database design',
+        'API development',
+      ],
       benefits: ['Flexible hours', 'Unlimited PTO', 'Learning budget'],
       skills: ['Node.js', 'React', 'MongoDB', 'JavaScript'],
       experience: '2-4 years',
-      education: 'Bachelor\'s degree',
+      education: "Bachelor's degree",
       postedDate: '2024-01-14',
       isActive: true,
       applications: 32,
@@ -54,8 +83,14 @@ export function JobSuggestions() {
       location: 'Remote',
       type: 'contract',
       salary: { min: 60000, max: 90000, currency: 'USD' },
-      description: 'Create beautiful and intuitive user experiences for web and mobile applications...',
-      requirements: ['Figma', 'Adobe Creative Suite', 'Portfolio', '2+ years experience'],
+      description:
+        'Create beautiful and intuitive user experiences for web and mobile applications...',
+      requirements: [
+        'Figma',
+        'Adobe Creative Suite',
+        'Portfolio',
+        '2+ years experience',
+      ],
       responsibilities: ['Design interfaces', 'User research', 'Prototyping'],
       benefits: ['Remote work', 'Flexible schedule', 'Creative freedom'],
       skills: ['Figma', 'Adobe Creative Suite', 'UI/UX Design', 'Prototyping'],
@@ -78,7 +113,7 @@ export function JobSuggestions() {
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 1) return '1 day ago';
     if (diffDays < 7) return `${diffDays} days ago`;
     return date.toLocaleDateString();
@@ -86,48 +121,104 @@ export function JobSuggestions() {
 
   const getJobTypeColor = (type: string) => {
     switch (type) {
-      case 'full-time': return '#0EA5E9';
-      case 'part-time': return '#6366F1';
-      case 'contract': return '#14B8A6'; // Freelancing highlight
-      case 'internship': return '#F59E0B';
-      case 'remote': return '#10B981';
-      default: return '#6B7280';
+      case 'full-time':
+        return '#0EA5E9';
+      case 'part-time':
+        return '#6366F1';
+      case 'contract':
+        return '#14B8A6';
+      case 'internship':
+        return '#F59E0B';
+      case 'remote':
+        return '#10B981';
+      default:
+        return '#6B7280';
     }
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: Colors[colorScheme].background },
+      ]}
+    >
       <View style={styles.header}>
-        <Text style={styles.title}>Recommended for You</Text>
+        <Text style={[styles.title, { color: Colors[colorScheme].text }]}>
+          Recommended for You
+        </Text>
         <TouchableOpacity onPress={() => router.push('/jobs')}>
-          <Text style={styles.seeAllText}>See all</Text>
+          <Text
+            style={[styles.seeAllText, { color: Colors[colorScheme].text }]}
+          >
+            See all
+          </Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView 
-        horizontal 
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.jobsContainer}
       >
         {recommendedJobs.map((job) => (
           <TouchableOpacity
             key={job.id}
-            style={styles.jobCard}
+            style={[
+              styles.jobCard,
+              {
+                backgroundColor: Colors[colorScheme].background,
+                borderColor: Colors[colorScheme].borderColor,
+              },
+            ]}
             onPress={() => router.push(`/jobs/${job.id}`)}
           >
             {/* Header */}
             <View style={styles.jobHeader}>
               <View style={styles.companyInfo}>
-                <View style={styles.companyLogo}>
-                  <Building size={20} color="#6B7280" />
+                <View
+                  style={[
+                    styles.companyLogo,
+                    {
+                      backgroundColor: Colors[colorScheme].text,
+                    },
+                  ]}
+                >
+                  <Building size={20} color={Colors[colorScheme].darkText} />
                 </View>
                 <View style={styles.companyText}>
-                  <Text style={styles.companyName}>{job.company}</Text>
-                  <Text style={styles.jobTitle}>{job.title}</Text>
+                  <Text
+                    style={[
+                      styles.companyName,
+                      {
+                        color: Colors[colorScheme].text,
+                      },
+                    ]}
+                  >
+                    {job.company}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.jobTitle,
+                      { color: Colors[colorScheme].text },
+                    ]}
+                  >
+                    {job.title}
+                  </Text>
                 </View>
               </View>
-              <View style={[styles.jobType, { backgroundColor: getJobTypeColor(job.type) + '20' }]}>
-                <Text style={[styles.jobTypeText, { color: getJobTypeColor(job.type) }]}>
+              <View
+                style={[
+                  styles.jobType,
+                  { backgroundColor: getJobTypeColor(job.type) + '20' },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.jobTypeText,
+                    { color: getJobTypeColor(job.type) },
+                  ]}
+                >
                   {job.type === 'contract' || job.type === 'remote'
                     ? 'FREELANCE'
                     : job.type.replace('-', ' ').toUpperCase()}
@@ -138,31 +229,71 @@ export function JobSuggestions() {
             {/* Details */}
             <View style={styles.jobDetails}>
               <View style={styles.detailItem}>
-                <MapPin size={14} color="#6B7280" />
-                <Text style={styles.detailText}>{job.location}</Text>
+                <MapPin size={14} color={Colors[colorScheme].text} />
+                <Text
+                  style={[
+                    styles.detailText,
+                    { color: Colors[colorScheme].text },
+                  ]}
+                >
+                  {job.location}
+                </Text>
               </View>
-              
+
               {job.salary && (
                 <View style={styles.detailItem}>
-                  <DollarSign size={14} color="#6B7280" />
-                  <Text style={styles.detailText}>{formatSalary(job.salary)}</Text>
+                  <DollarSign size={14} color={Colors[colorScheme].text} />
+                  <Text
+                    style={[
+                      styles.detailText,
+                      {
+                        color: Colors[colorScheme].text,
+                      },
+                    ]}
+                  >
+                    {formatSalary(job.salary)}
+                  </Text>
                 </View>
               )}
 
               <View style={styles.detailItem}>
-                <Clock size={14} color="#6B7280" />
-                <Text style={styles.detailText}>{formatDate(job.postedDate)}</Text>
+                <Clock size={14} color={Colors[colorScheme].text} />
+                <Text
+                  style={[
+                    styles.detailText,
+                    { color: Colors[colorScheme].text },
+                  ]}
+                >
+                  {formatDate(job.postedDate)}
+                </Text>
               </View>
             </View>
 
             {/* Footer */}
             <View style={styles.jobFooter}>
-              <Text style={styles.applicationsText}>
+              <Text
+                style={[
+                  styles.applicationsText,
+                  { color: Colors[colorScheme].text },
+                ]}
+              >
                 {job.applications} applications
               </Text>
-              <TouchableOpacity style={styles.applyButton}>
-                <Text style={styles.applyButtonText}>
-                  {job.type === 'contract' || job.type === 'remote' ? 'Bid Now' : 'Apply'}
+              <TouchableOpacity
+                style={[
+                  styles.applyButton,
+                  { backgroundColor: Colors[colorScheme].text },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.applyButtonText,
+                    { color: Colors[colorScheme].darkText },
+                  ]}
+                >
+                  {job.type === 'contract' || job.type === 'remote'
+                    ? 'Bid Now'
+                    : 'Apply'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -182,11 +313,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 16,
   },
-  title: { fontSize: 18, fontWeight: '700', color: '#0F172A' }, // dark slate
-  seeAllText: { fontSize: 14, color: '#0EA5E9', fontWeight: '600' },
+  title: { fontSize: 18, fontWeight: '700' },
+  seeAllText: { fontSize: 14, fontWeight: '600' },
   jobsContainer: { paddingHorizontal: 20 },
   jobCard: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     marginRight: 16,
@@ -197,7 +327,6 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 3,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
   },
   jobHeader: {
     flexDirection: 'row',
@@ -210,26 +339,28 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 8,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   companyText: { flex: 1 },
-  companyName: { fontSize: 13, color: '#6B7280', marginBottom: 2 },
-  jobTitle: { fontSize: 16, fontWeight: '700', color: '#1E293B', lineHeight: 20 }, // softer black
+  companyName: { fontSize: 13, marginBottom: 2 },
+  jobTitle: { fontSize: 16, fontWeight: '700', lineHeight: 20 },
   jobType: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
   jobTypeText: { fontSize: 11, fontWeight: '700' },
   jobDetails: { marginBottom: 16 },
   detailItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
-  detailText: { fontSize: 12, color: '#475569', marginLeft: 6 }, // gray slate
-  jobFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  applicationsText: { fontSize: 12, color: '#6B7280' },
+  detailText: { fontSize: 12, marginLeft: 6 },
+  jobFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  applicationsText: { fontSize: 12 },
   applyButton: {
-    backgroundColor: '#1E293B', // dark slate instead of pure black
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
   },
-  applyButtonText: { color: 'white', fontSize: 12, fontWeight: '600' },
+  applyButtonText: { fontSize: 12, fontWeight: '600' },
 });

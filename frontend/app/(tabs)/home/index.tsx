@@ -1,16 +1,27 @@
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, useColorScheme, View } from 'react-native';
 
 import { DashboardStats } from '../../../components/dashboard/DashboardStats';
 import { JobSuggestions } from '../../../components/dashboard/JobSuggestions';
 import { RecentApplications } from '../../../components/dashboard/RecentApplications';
+import Colors from '../../../constants/Colors';
 
 export default function DashboardScreen() {
+  const colorScheme = useColorScheme() ?? 'light';
+
   return (
-    <View style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: Colors[colorScheme].background,
+      }}
+    >
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Dashboard Stats */}
         <DashboardStats />
-         {/* Profile Completion */}
+        {/* Profile Completion */}
         {/* <ProfileStrength /> */}
 
         {/* Job Recommendations */}
@@ -24,8 +35,5 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F8FAFC' },
   scrollView: { flex: 1 },
-
-  
 });

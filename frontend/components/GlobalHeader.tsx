@@ -1,10 +1,18 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  useColorScheme,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useRouter } from 'expo-router';
 import { User, Bell } from 'lucide-react-native';
 import { useAuth } from '../contexts/AuthContext';
+import Colors from '../constants/Colors';
 
 interface GlobalHeaderProps {
   title?: string;
@@ -14,8 +22,8 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ title }) => {
   const insets = useSafeAreaInsets();
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const colorScheme = useColorScheme() ?? 'light';
   const [role, setRole] = React.useState(user?.role || 'user');
-
 
   const handlePress = () => {
     if (isLoading) return; // Prevent navigation if loading
@@ -30,38 +38,69 @@ export const GlobalHeader: React.FC<GlobalHeaderProps> = ({ title }) => {
   };
 
   return (
-    <View style={[styles.header, { paddingTop: insets.top }]}>
+    <View
+      style={[
+        styles.header,
+        {
+          paddingTop: insets.top,
+          backgroundColor: Colors[colorScheme].background,
+          borderBottomColor: Colors[colorScheme].borderColor,
+        },
+      ]}
+    >
       <View style={styles.leftSection}>
-        <Text style={styles.appName}>Rubiks</Text>
+        <Text style={[styles.appName, { color: Colors[colorScheme].text }]}>
+          Rubiks
+        </Text>
       </View>
 
       {title && (
         <View style={styles.centerSection}>
-          <Text style={styles.title}>{title}</Text>
+          <Text style={[styles.title, { color: Colors[colorScheme].text }]}>
+            {title}
+          </Text>
         </View>
       )}
 
       <View style={styles.rightSection}>
         <TouchableOpacity
           style={styles.profileButton}
-          onPress={role === "admin" ?handlePress : handleProfilePress}
+          onPress={role === 'admin' ? handlePress : handleProfilePress}
         >
           <View style={styles.profileContainer}>
-            <Text style={styles.userName}>{user?.name || 'User'}</Text>
+            <Text
+              style={[styles.userName, { color: Colors[colorScheme].text }]}
+            >
+              {user?.name || 'User'}
+            </Text>
             {user?.profile?.avatar ? (
               <Image
                 source={{ uri: user.profile.avatar }}
                 style={styles.avatar}
               />
             ) : (
-              <View style={styles.avatarPlaceholder}>
-                <User size={16} color="#60A5FA" />
+              <View
+                style={[
+                  styles.avatarPlaceholder,
+                  {
+                    backgroundColor: Colors[colorScheme].background,
+                  },
+                ]}
+              >
+                <User size={16} color={Colors[colorScheme].background} />
               </View>
             )}
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.notificationButton}>
-          <Bell size={20} color="#64748B" />
+        <TouchableOpacity
+          style={[
+            styles.notificationButton,
+            {
+              backgroundColor: Colors[colorScheme].text,
+            },
+          ]}
+        >
+          <Bell size={20} color={Colors[colorScheme].darkText} />
         </TouchableOpacity>
       </View>
     </View>
@@ -73,11 +112,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0F2FE',
   },
   leftSection: {
     flex: 1,
@@ -85,7 +122,6 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#000000',
   },
   centerSection: {
     flex: 2,
@@ -94,7 +130,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#0F172A',
   },
   rightSection: {
     flex: 1,
@@ -106,7 +141,6 @@ const styles = StyleSheet.create({
   notificationButton: {
     padding: 6,
     borderRadius: 50,
-    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -127,13 +161,11 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#E0F2FE',
     justifyContent: 'center',
     alignItems: 'center',
   },
   userName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#0F172A',
   },
 });
