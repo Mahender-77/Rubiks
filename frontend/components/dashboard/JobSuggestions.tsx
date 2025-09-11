@@ -2,11 +2,12 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Briefcase, MapPin, DollarSign, Clock, Building } from 'lucide-react-native';
-import {Job} from "../../types/job"
+import { Job } from "../../types/job";
+
 export function JobSuggestions() {
   const router = useRouter();
 
-  // Mock job data - in real app, this would come from API
+  // Mock job data
   const recommendedJobs: Job[] = [
     {
       id: '1',
@@ -48,7 +49,7 @@ export function JobSuggestions() {
     },
     {
       id: '3',
-      title: 'UI/UX Designer',
+      title: 'UI/UX Designer (Freelance)',
       company: 'Design Studio Pro',
       location: 'Remote',
       type: 'contract',
@@ -85,11 +86,11 @@ export function JobSuggestions() {
 
   const getJobTypeColor = (type: string) => {
     switch (type) {
-      case 'full-time': return '#10B981';
-      case 'part-time': return '#3B82F6';
-      case 'contract': return '#F59E0B';
-      case 'internship': return '#8B5CF6';
-      case 'remote': return '#EF4444';
+      case 'full-time': return '#0EA5E9';
+      case 'part-time': return '#6366F1';
+      case 'contract': return '#14B8A6'; // Freelancing highlight
+      case 'internship': return '#F59E0B';
+      case 'remote': return '#10B981';
       default: return '#6B7280';
     }
   };
@@ -114,6 +115,7 @@ export function JobSuggestions() {
             style={styles.jobCard}
             onPress={() => router.push(`/jobs/${job.id}`)}
           >
+            {/* Header */}
             <View style={styles.jobHeader}>
               <View style={styles.companyInfo}>
                 <View style={styles.companyLogo}>
@@ -126,11 +128,14 @@ export function JobSuggestions() {
               </View>
               <View style={[styles.jobType, { backgroundColor: getJobTypeColor(job.type) + '20' }]}>
                 <Text style={[styles.jobTypeText, { color: getJobTypeColor(job.type) }]}>
-                  {job.type.replace('-', ' ').toUpperCase()}
+                  {job.type === 'contract' || job.type === 'remote'
+                    ? 'FREELANCE'
+                    : job.type.replace('-', ' ').toUpperCase()}
                 </Text>
               </View>
             </View>
 
+            {/* Details */}
             <View style={styles.jobDetails}>
               <View style={styles.detailItem}>
                 <MapPin size={14} color="#6B7280" />
@@ -150,12 +155,15 @@ export function JobSuggestions() {
               </View>
             </View>
 
+            {/* Footer */}
             <View style={styles.jobFooter}>
               <Text style={styles.applicationsText}>
                 {job.applications} applications
               </Text>
               <TouchableOpacity style={styles.applyButton}>
-                <Text style={styles.applyButtonText}>Apply</Text>
+                <Text style={styles.applyButtonText}>
+                  {job.type === 'contract' || job.type === 'remote' ? 'Bid Now' : 'Apply'}
+                </Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
@@ -166,9 +174,7 @@ export function JobSuggestions() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginTop: 16,
-  },
+  container: { marginTop: 24 },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -176,33 +182,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 16,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  seeAllText: {
-    fontSize: 14,
-    color: '#3B82F6',
-    fontWeight: '500',
-  },
-  jobsContainer: {
-    paddingHorizontal: 20,
-  },
+  title: { fontSize: 18, fontWeight: '700', color: '#0F172A' }, // dark slate
+  seeAllText: { fontSize: 14, color: '#0EA5E9', fontWeight: '600' },
+  jobsContainer: { paddingHorizontal: 20 },
   jobCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginRight: 16,
     width: 280,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   jobHeader: {
     flexDirection: 'row',
@@ -210,11 +205,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 12,
   },
-  companyInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
+  companyInfo: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   companyLogo: {
     width: 40,
     height: 40,
@@ -224,60 +215,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 12,
   },
-  companyText: {
-    flex: 1,
-  },
-  companyName: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 2,
-  },
-  jobTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    lineHeight: 20,
-  },
-  jobType: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  jobTypeText: {
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  jobDetails: {
-    marginBottom: 16,
-  },
-  detailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  detailText: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginLeft: 6,
-  },
-  jobFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  applicationsText: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
+  companyText: { flex: 1 },
+  companyName: { fontSize: 13, color: '#6B7280', marginBottom: 2 },
+  jobTitle: { fontSize: 16, fontWeight: '700', color: '#1E293B', lineHeight: 20 }, // softer black
+  jobType: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
+  jobTypeText: { fontSize: 11, fontWeight: '700' },
+  jobDetails: { marginBottom: 16 },
+  detailItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
+  detailText: { fontSize: 12, color: '#475569', marginLeft: 6 }, // gray slate
+  jobFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  applicationsText: { fontSize: 12, color: '#6B7280' },
   applyButton: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#1E293B', // dark slate instead of pure black
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 6,
+    borderRadius: 8,
   },
-  applyButtonText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '600',
-  },
+  applyButtonText: { color: 'white', fontSize: 12, fontWeight: '600' },
 });

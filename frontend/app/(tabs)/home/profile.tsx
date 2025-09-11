@@ -23,15 +23,15 @@ import {
   X,
   Save,
   Trash2,
+  CheckCircle,
+  Circle,
 } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import ResumeModal from '../../../components/ResumeModel';
 import { useAuth } from '../../../contexts/AuthContext';
 
-
-
 export default function ProfileScreen() {
-  const { user ,logout,updateAvatar,updateProfile,updateContact} = useAuth();
+  const { user, logout, updateAvatar, updateProfile, updateContact } = useAuth();
   const router = useRouter();
 
   // Resume Modal State
@@ -80,6 +80,25 @@ export default function ProfileScreen() {
   // Skills Section State
   const [isAddingSkills, setIsAddingSkills] = useState(false);
   const [skillsDraft, setSkillsDraft] = useState('');
+
+  // Calculate Profile Strength
+  const calculateProfileStrength = () => {
+    let completedSections = 0;
+    const totalSections = 7;
+
+    // Check each section
+    if (user?.profile?.avatar) completedSections += 1;
+    if (user?.name && user?.email && user?.phone) completedSections += 1;
+    if (user?.profile?.headline) completedSections += 1;
+    if (user?.profile?.bio) completedSections += 1;
+    if (user?.profile?.experience && user.profile.experience.length > 0) completedSections += 1;
+    if (user?.profile?.education && user.profile.education.length > 0) completedSections += 1;
+    if (user?.profile?.skills && user.profile.skills.length > 0) completedSections += 1;
+
+    return Math.round((completedSections / totalSections) * 100);
+  };
+
+  const profileStrength = calculateProfileStrength();
 
   // Helper to check if profile is complete for resume preview
   const isProfileComplete =
@@ -251,6 +270,9 @@ export default function ProfileScreen() {
       </View>
       <Text style={styles.emptySectionTitle}>{title}</Text>
       <Text style={styles.emptySectionSubtitle}>Tap to add</Text>
+      <View style={styles.addButton}>
+        <Plus size={16} color="#FFFFFF" />
+      </View>
     </TouchableOpacity>
   );
 
@@ -261,7 +283,7 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIcon}>
-              <User size={20} color="#6B7280" />
+              <User size={20} color="#000000" />
             </View>
             <Text style={styles.sectionTitle}>Profile Information</Text>
             <TouchableOpacity onPress={() => {
@@ -275,7 +297,7 @@ export default function ProfileScreen() {
                 url: user?.profile?.url || ''
               });
             }}>
-              <X size={16} color="#6B7280" />
+              <X size={20} color="#000000" />
             </TouchableOpacity>
           </View>
           <View style={styles.formContainer}>
@@ -383,37 +405,37 @@ export default function ProfileScreen() {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionIcon}>
-            <User size={20} color="#6B7280" />
+            <User size={20} color="#000000" />
           </View>
           <Text style={styles.sectionTitle}>Profile Information</Text>
-          <TouchableOpacity onPress={() => setIsEditingProfile(true)}>
-            <Edit size={16} color="#3B82F6" />
+          <TouchableOpacity style={styles.editButton} onPress={() => setIsEditingProfile(true)}>
+            <Edit size={16} color="#000000" />
           </TouchableOpacity>
         </View>
         <View style={styles.profileInfoDisplay}>
           <View style={styles.profileInfoRow}>
-            <Text style={styles.profileInfoLabel}>Name:</Text>
+            <Text style={styles.profileInfoLabel}>Name</Text>
             <Text style={styles.profileInfoValue}>{user?.name || 'Not set'}</Text>
           </View>
           <View style={styles.profileInfoRow}>
-            <Text style={styles.profileInfoLabel}>Headline:</Text>
+            <Text style={styles.profileInfoLabel}>Headline</Text>
             <Text style={styles.profileInfoValue}>{user?.profile?.headline || 'Not set'}</Text>
           </View>
           <View style={styles.profileInfoRow}>
-            <Text style={styles.profileInfoLabel}>Email:</Text>
+            <Text style={styles.profileInfoLabel}>Email</Text>
             <Text style={styles.profileInfoValue}>{user?.email || 'Not set'}</Text>
           </View>
           <View style={styles.profileInfoRow}>
-            <Text style={styles.profileInfoLabel}>Phone:</Text>
+            <Text style={styles.profileInfoLabel}>Phone</Text>
             <Text style={styles.profileInfoValue}>{user?.phone || 'Not set'}</Text>
           </View>
           <View style={styles.profileInfoRow}>
-            <Text style={styles.profileInfoLabel}>Location:</Text>
+            <Text style={styles.profileInfoLabel}>Location</Text>
             <Text style={styles.profileInfoValue}>{user?.profile?.location || 'Not set'}</Text>
           </View>
           {user?.profile?.url && (
             <View style={styles.profileInfoRow}>
-              <Text style={styles.profileInfoLabel}>URL:</Text>
+              <Text style={styles.profileInfoLabel}>URL</Text>
               <Text style={styles.profileInfoValue}>{user.profile.url}</Text>
             </View>
           )}
@@ -429,7 +451,7 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIcon}>
-              <User size={20} color="#6B7280" />
+              <User size={20} color="#000000" />
             </View>
             <Text style={styles.sectionTitle}>About</Text>
             <TouchableOpacity onPress={() => {
@@ -437,7 +459,7 @@ export default function ProfileScreen() {
               setIsEditingAbout(false);
               setAboutDraft(user?.profile?.bio || '');
             }}>
-              <X size={16} color="#6B7280" />
+              <X size={20} color="#000000" />
             </TouchableOpacity>
           </View>
           <TextInput
@@ -491,14 +513,14 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIcon}>
-              <User size={20} color="#6B7280" />
+              <User size={20} color="#000000" />
             </View>
             <Text style={styles.sectionTitle}>About</Text>
-            <TouchableOpacity onPress={() => {
+            <TouchableOpacity style={styles.editButton} onPress={() => {
               setIsEditingAbout(true);
               setAboutDraft(user?.profile?.bio || '');
             }}>
-              <Edit size={16} color="#3B82F6" />
+              <Edit size={16} color="#000000" />
             </TouchableOpacity>
           </View>
           <Text style={styles.bioText}>{user.profile.bio}</Text>
@@ -508,7 +530,7 @@ export default function ProfileScreen() {
 
     return renderEmptySection(
       'Add About',
-      <User size={24} color="#6B7280" />,
+      <User size={24} color="#000000" />,
       () => {
         setIsAddingAbout(true);
         setAboutDraft('');
@@ -523,7 +545,7 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIcon}>
-              <Briefcase size={20} color="#6B7280" />
+              <Briefcase size={20} color="#000000" />
             </View>
             <Text style={styles.sectionTitle}>Experience</Text>
             <TouchableOpacity onPress={() => {
@@ -538,7 +560,7 @@ export default function ProfileScreen() {
                 description: ''
               });
             }}>
-              <X size={16} color="#6B7280" />
+              <X size={20} color="#000000" />
             </TouchableOpacity>
           </View>
           <View style={styles.formContainer}>
@@ -665,11 +687,11 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIcon}>
-              <Briefcase size={20} color="#6B7280" />
+              <Briefcase size={20} color="#000000" />
             </View>
             <Text style={styles.sectionTitle}>Experience</Text>
-            <TouchableOpacity onPress={() => setIsAddingExperience(true)}>
-              <Plus size={16} color="#3B82F6" />
+            <TouchableOpacity style={styles.addButton} onPress={() => setIsAddingExperience(true)}>
+              <Plus size={16} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
           <View style={styles.experienceList}>
@@ -687,7 +709,7 @@ export default function ProfileScreen() {
                     style={styles.deleteButton}
                     onPress={() => deleteExperience(index)}
                   >
-                    <Trash2 size={16} color="#EF4444" />
+                    <Trash2 size={16} color="#FFFFFF" />
                   </TouchableOpacity>
                 </View>
                 {exp.description && (
@@ -702,7 +724,7 @@ export default function ProfileScreen() {
 
     return renderEmptySection(
       'Add Experience',
-      <Briefcase size={24} color="#6B7280" />,
+      <Briefcase size={24} color="#000000" />,
       () => setIsAddingExperience(true)
     );
   };
@@ -714,7 +736,7 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIcon}>
-              <GraduationCap size={20} color="#6B7280" />
+              <GraduationCap size={20} color="#000000" />
             </View>
             <Text style={styles.sectionTitle}>Education</Text>
             <TouchableOpacity onPress={() => {
@@ -729,7 +751,7 @@ export default function ProfileScreen() {
                 gpa: ''
               });
             }}>
-              <X size={16} color="#6B7280" />
+              <X size={20} color="#000000" />
             </TouchableOpacity>
           </View>
           <View style={styles.formContainer}>
@@ -854,11 +876,11 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIcon}>
-              <GraduationCap size={20} color="#6B7280" />
+              <GraduationCap size={20} color="#000000" />
             </View>
             <Text style={styles.sectionTitle}>Education</Text>
-            <TouchableOpacity onPress={() => setIsAddingEducation(true)}>
-              <Plus size={16} color="#3B82F6" />
+            <TouchableOpacity style={styles.addButton} onPress={() => setIsAddingEducation(true)}>
+              <Plus size={16} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
           <View style={styles.educationList}>
@@ -879,7 +901,7 @@ export default function ProfileScreen() {
                     style={styles.deleteButton}
                     onPress={() => deleteEducation(index)}
                   >
-                    <Trash2 size={16} color="#EF4444" />
+                    <Trash2 size={16} color="#FFFFFF" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -891,7 +913,7 @@ export default function ProfileScreen() {
 
     return renderEmptySection(
       'Add Education',
-      <GraduationCap size={24} color="#6B7280" />,
+      <GraduationCap size={24} color="#000000" />,
       () => setIsAddingEducation(true)
     );
   };
@@ -903,14 +925,14 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIcon}>
-              <Award size={20} color="#6B7280" />
+              <Award size={20} color="#000000" />
             </View>
             <Text style={styles.sectionTitle}>Skills</Text>
             <TouchableOpacity onPress={() => {
               setIsAddingSkills(false);
               setSkillsDraft('');
             }}>
-              <X size={16} color="#6B7280" />
+              <X size={20} color="#000000" />
             </TouchableOpacity>
           </View>
           <View style={styles.inputGroup}>
@@ -968,11 +990,11 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIcon}>
-              <Award size={20} color="#6B7280" />
+              <Award size={20} color="#000000" />
             </View>
             <Text style={styles.sectionTitle}>Skills</Text>
-            <TouchableOpacity onPress={() => setIsAddingSkills(true)}>
-              <Plus size={16} color="#3B82F6" />
+            <TouchableOpacity style={styles.addButton} onPress={() => setIsAddingSkills(true)}>
+              <Plus size={16} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
           <View style={styles.skillsList}>
@@ -983,7 +1005,7 @@ export default function ProfileScreen() {
                   style={styles.skillDeleteButton}
                   onPress={() => deleteSkill(skill)}
                 >
-                  <X size={12} color="#EF4444" />
+                  <X size={12} color="#000000" />
                 </TouchableOpacity>
               </View>
             ))}
@@ -994,27 +1016,145 @@ export default function ProfileScreen() {
 
     return renderEmptySection(
       'Add Skills',
-      <Award size={24} color="#6B7280" />,
+      <Award size={24} color="#000000" />,
       () => setIsAddingSkills(true)
     );
   };
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Avatar Section */}
-      <View style={styles.avatarSection}>
-        <TouchableOpacity style={styles.avatarContainer} onPress={showImageOptions}>
-          {user?.profile?.avatar ? (
-            <Image source={{ uri: user.profile.avatar }} style={styles.avatar} />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <User size={32} color="#6B7280" />
+      {/* Header Section with Profile Strength */}
+      <View style={styles.headerSection}>
+        {/* Avatar Section */}
+        <View style={styles.avatarSection}>
+          <TouchableOpacity style={styles.avatarContainer} onPress={showImageOptions}>
+            {user?.profile?.avatar ? (
+              <Image source={{ uri: user.profile.avatar }} style={styles.avatar} />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <User size={40} color="#CCCCCC" />
+              </View>
+            )}
+            <View style={styles.cameraButton}>
+              <Camera size={16} color="white" />
             </View>
-          )}
-          <View style={styles.cameraButton}>
-            <Camera size={12} color="white" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Profile Strength Indicator */}
+        <View style={styles.profileStrengthContainer}>
+          <View style={styles.profileStrengthHeader}>
+            <Text style={styles.profileStrengthTitle}>Profile Strength</Text>
+            <Text style={styles.profileStrengthPercentage}>{profileStrength}%</Text>
           </View>
-        </TouchableOpacity>
+          
+          {/* Progress Bar */}
+          <View style={styles.progressBarContainer}>
+            <View style={styles.progressBarBackground}>
+              <View 
+                style={[
+                  styles.progressBarFill, 
+                  { width: `${profileStrength}%` }
+                ]} 
+              />
+            </View>
+          </View>
+
+          {/* Profile Completion Checklist */}
+          {/* <View style={styles.completionChecklist}>
+            <View style={styles.checklistItem}>
+              {user?.profile?.avatar ? (
+                <CheckCircle size={16} color="#000000" />
+              ) : (
+                <Circle size={16} color="#CCCCCC" />
+              )}
+              <Text style={[
+                styles.checklistText,
+                user?.profile?.avatar && styles.checklistTextCompleted
+              ]}>
+                Profile Photo
+              </Text>
+            </View>
+            <View style={styles.checklistItem}>
+              {(user?.name && user?.email && user?.phone) ? (
+                <CheckCircle size={16} color="#000000" />
+              ) : (
+                <Circle size={16} color="#CCCCCC" />
+              )}
+              <Text style={[
+                styles.checklistText,
+                (user?.name && user?.email && user?.phone) && styles.checklistTextCompleted
+              ]}>
+                Basic Information
+              </Text>
+            </View>
+            <View style={styles.checklistItem}>
+              {user?.profile?.headline ? (
+                <CheckCircle size={16} color="#000000" />
+              ) : (
+                <Circle size={16} color="#CCCCCC" />
+              )}
+              <Text style={[
+                styles.checklistText,
+                user?.profile?.headline && styles.checklistTextCompleted
+              ]}>
+                Professional Headline
+              </Text>
+            </View>
+            <View style={styles.checklistItem}>
+              {user?.profile?.bio ? (
+                <CheckCircle size={16} color="#000000" />
+              ) : (
+                <Circle size={16} color="#CCCCCC" />
+              )}
+              <Text style={[
+                styles.checklistText,
+                user?.profile?.bio && styles.checklistTextCompleted
+              ]}>
+                About Section
+              </Text>
+            </View>
+            <View style={styles.checklistItem}>
+              {(user?.profile?.experience && user.profile.experience.length > 0) ? (
+                <CheckCircle size={16} color="#000000" />
+              ) : (
+                <Circle size={16} color="#CCCCCC" />
+              )}
+              <Text style={[
+                styles.checklistText,
+                (user?.profile?.experience && user.profile.experience.length > 0) && styles.checklistTextCompleted
+              ]}>
+                Work Experience
+              </Text>
+            </View>
+            <View style={styles.checklistItem}>
+              {(user?.profile?.education && user.profile.education.length > 0) ? (
+                <CheckCircle size={16} color="#000000" />
+              ) : (
+                <Circle size={16} color="#CCCCCC" />
+              )}
+              <Text style={[
+                styles.checklistText,
+                (user?.profile?.education && user.profile.education.length > 0) && styles.checklistTextCompleted
+              ]}>
+                Education
+              </Text>
+            </View>
+            <View style={styles.checklistItem}>
+              {(user?.profile?.skills && user.profile.skills.length > 0) ? (
+                <CheckCircle size={16} color="#000000" />
+              ) : (
+                <Circle size={16} color="#CCCCCC" />
+              )}
+              <Text style={[
+                styles.checklistText,
+                (user?.profile?.skills && user.profile.skills.length > 0) && styles.checklistTextCompleted
+              ]}>
+                Skills
+              </Text>
+            </View>
+          </View> */}
+        </View>
       </View>
 
       {/* Profile Information */}
@@ -1047,7 +1187,7 @@ export default function ProfileScreen() {
       {/* Logout */}
       <View style={styles.actionsContainer}>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <LogOut size={20} color="#EF4444" />
+          <LogOut size={20} color="#000000" />
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
@@ -1061,155 +1201,241 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#FFFFFF',
+  },
+
+  // Header Section
+  headerSection: {
+    backgroundColor: '#FFFFFF',
   },
   avatarSection: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    paddingTop: 24,
   },
   avatarContainer: {
     position: 'relative',
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 1,
+    borderColor: '#1E293B', // soft black-gray
   },
   avatarPlaceholder: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#F3F4F6',
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#334155', // medium dark gray
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 4,
+    borderColor: '#FFFFFF',
   },
   cameraButton: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: '#3B82F6',
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    backgroundColor: '#1E293B', // dark gray
+    width: 32,
+    height: 32,
+    borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
   },
+
+  // Profile Strength Section
+  profileStrengthContainer: {
+    marginHorizontal: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 20,
+  },
+  profileStrengthHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  profileStrengthTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0F172A', // very dark slate
+  },
+  profileStrengthPercentage: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#1E293B',
+  },
+  progressBarContainer: {
+    marginBottom: 16,
+  },
+  progressBarBackground: {
+    height: 8,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#1E293B',
+    borderRadius: 4,
+  },
+  completionChecklist: {
+    gap: 8,
+  },
+  checklistItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  checklistText: {
+    fontSize: 14,
+    color: '#64748B', // gray
+    fontWeight: '500',
+  },
+  checklistTextCompleted: {
+    color: '#1E293B',
+    fontWeight: '600',
+  },
+
+  // Section Styles
   section: {
     backgroundColor: '#FFFFFF',
     marginHorizontal: 20,
     marginTop: 16,
     borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   sectionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F8FAFC',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginRight: 12,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0F172A',
     flex: 1,
   },
+  editButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F8FAFC',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  addButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#1E293B',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // Profile Info Display
   profileInfoDisplay: {
-    gap: 8,
+    gap: 12,
   },
   profileInfoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 4,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
   },
   profileInfoLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6B7280',
-    flex: 1,
+    color: '#1E293B',
+    minWidth: 80,
   },
   profileInfoValue: {
     fontSize: 14,
-    color: '#374151',
-    flex: 2,
+    color: '#64748B',
+    flex: 1,
     textAlign: 'right',
+    fontWeight: '500',
   },
+
+  // Form Elements
   formContainer: {
-    gap: 12,
-    marginTop: 12,
+    gap: 16,
   },
   inputGroup: {
-    marginBottom: 12,
+    marginBottom: 4,
   },
   inputLabel: {
     fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 4,
+    color: '#0F172A',
+    marginBottom: 8,
+    fontWeight: '600',
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
     borderRadius: 8,
-    padding: 12,
-    fontSize: 14,
-    color: '#111827',
+    padding: 16,
+    fontSize: 16,
+    color: '#1E293B',
     backgroundColor: '#FFFFFF',
+    fontWeight: '500',
   },
   row: {
     flexDirection: 'row',
     gap: 12,
   },
-  bioText: {
-    fontSize: 14,
-    color: '#374151',
-    lineHeight: 20,
-  },
   aboutInput: {
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
     borderRadius: 8,
-    padding: 12,
-    fontSize: 14,
-    color: '#111827',
+    padding: 16,
+    fontSize: 16,
+    color: '#1E293B',
     backgroundColor: '#FFFFFF',
-    minHeight: 100,
-    marginBottom: 12,
+    minHeight: 120,
+    fontWeight: '500',
   },
   aboutActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: 12,
+    marginTop: 16,
   },
   cancelBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderWidth: 2,
+    borderColor: '#334155',
     backgroundColor: '#FFFFFF',
   },
   cancelBtnText: {
-    color: '#6B7280',
-    fontWeight: '600',
+    color: '#334155',
+    fontWeight: '700',
+    fontSize: 14,
   },
   saveBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     borderRadius: 8,
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#1E293B',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -1217,119 +1443,25 @@ const styles = StyleSheet.create({
   saveBtnText: {
     color: '#FFFFFF',
     fontWeight: '700',
+    fontSize: 14,
   },
+
+  // Content Display
+  bioText: {
+    fontSize: 16,
+    color: '#334155',
+    lineHeight: 24,
+    fontWeight: '400',
+  },
+
+  // Experience Section
   experienceList: {
-    gap: 12,
+    gap: 16,
   },
   experienceItem: {
-    paddingBottom: 12,
+    paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  experienceTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 2,
-  },
-  experienceCompany: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 2,
-  },
-  experienceDuration: {
-    fontSize: 12,
-    color: '#9CA3AF',
-  },
-  experienceDescription: {
-    fontSize: 14,
-    color: '#4B5563',
-    marginTop: 4,
-  },
-  educationList: {
-    gap: 12,
-  },
-  educationItem: {
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  educationDegree: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 2,
-  },
-  educationInstitution: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 2,
-  },
-  educationDuration: {
-    fontSize: 12,
-    color: '#9CA3AF',
-  },
-  educationGpa: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginTop: 4,
-  },
-  skillsList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  skillTag: {
-    backgroundColor: '#F3F4F6',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  skillText: {
-    fontSize: 12,
-    color: '#374151',
-    fontWeight: '500',
-  },
-  skillDeleteButton: {
-    padding: 2,
-  },
-  emptySection: {
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 20,
-    marginTop: 16,
-    borderRadius: 12,
-    padding: 24,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  emptySectionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#F3F4F6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  emptySectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  emptySectionSubtitle: {
-    fontSize: 14,
-    color: '#6B7280',
+    borderBottomColor: '#F1F5F9',
   },
   itemHeader: {
     flexDirection: 'row',
@@ -1340,17 +1472,142 @@ const styles = StyleSheet.create({
   itemInfo: {
     flex: 1,
   },
-  deleteButton: {
-    padding: 4,
-    marginLeft: 8,
+  experienceTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 4,
   },
+  experienceCompany: {
+    fontSize: 16,
+    color: '#475569',
+    marginBottom: 4,
+    fontWeight: '600',
+  },
+  experienceDuration: {
+    fontSize: 14,
+    color: '#94A3B8',
+    fontWeight: '500',
+  },
+  experienceDescription: {
+    fontSize: 15,
+    color: '#475569',
+    marginTop: 8,
+    lineHeight: 22,
+  },
+  deleteButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#1E293B',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 12,
+  },
+
+  // Education Section
+  educationList: {
+    gap: 16,
+  },
+  educationItem: {
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  educationDegree: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 4,
+  },
+  educationInstitution: {
+    fontSize: 16,
+    color: '#475569',
+    marginBottom: 4,
+    fontWeight: '600',
+  },
+  educationDuration: {
+    fontSize: 14,
+    color: '#94A3B8',
+    fontWeight: '500',
+  },
+  educationGpa: {
+    fontSize: 14,
+    color: '#64748B',
+    marginTop: 4,
+    fontWeight: '600',
+  },
+
+  // Skills Section
+  skillsList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  skillTag: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#334155',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  skillText: {
+    fontSize: 14,
+    color: '#1E293B',
+    fontWeight: '600',
+  },
+  skillDeleteButton: {
+    padding: 4,
+  },
+
+  // Empty Section
+  emptySection: {
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 20,
+    marginTop: 16,
+    borderRadius: 12,
+    padding: 32,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    borderStyle: 'dashed',
+    position: 'relative',
+  },
+  emptySectionIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#F8FAFC',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  emptySectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 8,
+  },
+  emptySectionSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+
+  // Resume Preview
   resumePreviewContainer: {
     marginHorizontal: 20,
     marginTop: 24,
   },
   resumePreviewButton: {
-    backgroundColor: '#3B82F6',
-    padding: 16,
+    backgroundColor: '#1E293B',
+    padding: 18,
     borderRadius: 12,
     alignItems: 'center',
     flexDirection: 'row',
@@ -1359,27 +1616,30 @@ const styles = StyleSheet.create({
   },
   resumePreviewText: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 16,
+    fontWeight: '700',
+    fontSize: 18,
   },
+
+  // Actions
   actionsContainer: {
     marginHorizontal: 20,
     marginTop: 24,
-    marginBottom: 32,
+    marginBottom: 40,
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF2F2',
-    padding: 16,
+    backgroundColor: '#F8FAFC',
+    padding: 18,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#FECACA',
+    borderWidth: 2,
+    borderColor: '#334155',
+    justifyContent: 'center',
   },
   logoutText: {
     fontSize: 16,
-    color: '#EF4444',
+    color: '#1E293B',
     marginLeft: 12,
-    fontWeight: '500',
+    fontWeight: '700',
   },
 });

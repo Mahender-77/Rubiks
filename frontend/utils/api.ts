@@ -322,3 +322,20 @@ export const getStoredAuth = async () => {
     };
   }
 };
+
+export const getJobProposals = async (jobId: string | null) => {
+  if (!jobId) {
+    console.warn('getJobProposals called with null jobId');
+    return [];
+  }
+  try {
+    const { data } = await axiosInstance.get(`/admin/jobproposals/${jobId}`);
+    if (data.success && data.proposals) {
+      return data.proposals;
+    } 
+    return [];
+  } catch (error) {
+   
+    throw error;
+  } 
+};

@@ -13,6 +13,8 @@ import {
   CheckCircle,
   AlertCircle,
   ExternalLink,
+  Star,
+  MessageCircle,
 } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
@@ -26,8 +28,11 @@ import {
   View,
   SafeAreaView,
   StatusBar,
+  Image,
+  TextInput,
 } from 'react-native';
-import { getJobDetails } from '../../../utils/api';
+import { getJobDetails, getJobProposals } from '../../../utils/api';
+// import { getJobProposals } from '../../../utils/api'; // Uncomment when API is ready
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -55,6 +60,34 @@ interface JobDetails {
   createdAt: string;
   updatedAt: string;
   isActive: boolean;
+  // freelance specific fields
+  budget?: {
+    min: number;
+    max: number;
+    currency: string;
+    type: string;
+  };
+  duration?: string;
+  proposals?: number;
+}
+
+interface Proposal {
+  _id: string;
+  freelancerId: string;
+  freelancerName: string;
+  freelancerAvatar?: string;
+  rating: number;
+  completedJobs: number;
+  successRate: number;
+  country: string;
+  bidAmount: number;
+  currency: string;
+  deliveryTime: string;
+  coverLetter: string;
+  skills: string[];
+  responseTime: string;
+  isVerified: boolean;
+  badges: string[];
 }
 
 export default function JobDetailsScreen() {
@@ -62,16 +95,31 @@ export default function JobDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
 
   const [job, setJob] = useState<JobDetails | null>(null);
+  const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [proposalsLoading, setProposalsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [applying, setApplying] = useState(false);
+  const [activeTab, setActiveTab] = useState<'details' | 'proposals'>('details');
+
+  // Freelance form states
+  const [hourlyRate, setHourlyRate] = useState('');
+  const [address, setAddress] = useState('');
 
   useEffect(() => {
     if (id) {
       fetchJobDetails();
     }
   }, [id]);
+
+  useEffect(() => {
+    if (job && job.type === 'freelance' && activeTab === 'proposals') {
+      fetchProposals();
+    }
+  }, [job, activeTab]);
+
+  console.log("🔍 JobDetailsScreen: Rendering with state:", job);
 
   const fetchJobDetails = async () => {
     if (!id) return;
@@ -95,6 +143,20 @@ export default function JobDetailsScreen() {
     }
   };
 
+  const fetchProposals = async () => {
+    if (!id) return;
+
+    setProposalsLoading(true);
+    try {
+      const data = await getJobProposals(id);
+      setProposals(data || []);
+    } catch (error) {
+      
+    } finally {
+      setProposalsLoading(false);
+    }
+  };
+
   const handleApply = async () => {
     if (!job) return;
 
@@ -102,14 +164,18 @@ export default function JobDetailsScreen() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 2000));
       Alert.alert(
-        'Application Submitted!',
-        'Your application has been submitted successfully. You will be notified about the status.',
+        job.type === 'freelance' ? 'Proposal Submitted!' : 'Application Submitted!',
+        job.type === 'freelance' 
+          ? 'Your proposal has been submitted successfully. You will be notified about the status.'
+          : 'Your application has been submitted successfully. You will be notified about the status.',
         [{ text: 'OK' }]
       );
     } catch (error) {
       Alert.alert(
-        'Application Failed',
-        'Failed to submit application. Please try again.',
+        (job.type === 'freelance' || job.type === 'freelance' || job.type === 'contract') ? 'Proposal Failed' : 'Application Failed',
+        (job.type === 'freelance' || job.type === 'freelance' || job.type === 'contract')
+          ? 'Failed to submit proposal. Please try again.'
+          : 'Failed to submit application. Please try again.',
         [{ text: 'OK' }]
       );
     } finally {
@@ -128,6 +194,13 @@ export default function JobDetailsScreen() {
     }`;
   };
 
+  const formatBudget = (budget?: JobDetails['budget']) => {
+    if (!budget) return 'Budget not disclosed';
+    return `₹${budget.min.toLocaleString()} - ₹${budget.max.toLocaleString()} ${
+      budget.type
+    }`;
+  };
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -138,7 +211,7 @@ export default function JobDetailsScreen() {
     });
   };
 
-  const getJobTypeColor = (type: string) => {
+  const gettypeColor = (type: string) => {
     switch (type) {
       case 'full-time':
         return '#10B981';
@@ -176,6 +249,213 @@ export default function JobDetailsScreen() {
         </View>
       </View>
     );
+  };
+
+  const renderProposalCard = (proposal: Proposal) => (
+    <View key={proposal._id} style={styles.proposalCard}>
+      <View style={styles.proposalHeader}>
+        <View style={styles.freelancerInfo}>
+          <View style={styles.freelancerAvatar}>
+            {proposal.freelancerAvatar ? (
+              <Image source={{ uri: proposal.freelancerAvatar }} style={styles.avatarImage} />
+            ) : (
+              <Users size={24} color="#6B7280" />
+            )}
+          </View>
+          <View style={styles.freelancerDetails}>
+            <View style={styles.freelancerNameRow}>
+              <Text style={styles.freelancerName}>{proposal.freelancerName}</Text>
+              {proposal.isVerified && (
+                <CheckCircle size={16} color="#10B981" />
+              )}
+            </View>
+            <View style={styles.freelancerStats}>
+              <View style={styles.statRow}>
+                <Star size={12} color="#F59E0B" fill="#F59E0B" />
+                <Text style={styles.statText}>{proposal.rating}</Text>
+              </View>
+              <View style={styles.statRow}>
+                <Text style={styles.statText}>{proposal.completedJobs}</Text>
+              </View>
+              <View style={styles.statRow}>
+                <Text style={styles.statText}>{proposal.successRate}%</Text>
+              </View>
+              <Text style={styles.countryText}>{proposal.country}</Text>
+            </View>
+          </View>
+        </View>
+        <View style={styles.proposalAmount}>
+          <Text style={styles.bidAmount}>₹{proposal.bidAmount.toLocaleString()} INR</Text>
+          <Text style={styles.deliveryTime}>in {proposal.deliveryTime}</Text>
+        </View>
+      </View>
+
+      {proposal.badges.length > 0 && (
+        <View style={styles.badgesContainer}>
+          {proposal.badges.map((badge, index) => (
+            <Text key={index} style={styles.badge}>{badge}</Text>
+          ))}
+        </View>
+      )}
+
+      <Text style={styles.coverLetter}>{proposal.coverLetter}</Text>
+      
+      <Text style={styles.responseTime}>Replies within {proposal.responseTime}</Text>
+      
+      <TouchableOpacity style={styles.reportButton}>
+        <Text style={styles.reportButtonText}>Report Bid</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderTabContent = () => {
+    if (activeTab === 'details') {
+      return (
+        <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+          {/* Job Stats */}
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <View style={styles.statIcon}>
+                <IndianRupee size={16} color="#3B82F6" />
+              </View>
+              <Text style={styles.statLabel}>
+                {job?.type === 'freelance' ? 'Budget' : 'Salary'}
+              </Text>
+              <Text style={styles.statValue}>
+                {job?.type === 'freelance' ? formatBudget(job.budget) : formatSalary(job?.salary)}
+              </Text>
+            </View>
+
+            <View style={styles.statItem}>
+              <View style={styles.statIcon}>
+                <Users size={16} color="#10B981" />
+              </View>
+              <Text style={styles.statLabel}>
+                {job?.type === 'freelance' ? 'Proposals' : 'Applications'}
+              </Text>
+              <Text style={styles.statValue}>
+                {job?.type === 'freelance' ? (job.proposals || 0) : (job?.applications || 0)}
+              </Text>
+            </View>
+
+            <View style={styles.statItem}>
+              <View style={styles.statIcon}>
+                <Clock size={16} color="#8B5CF6" />
+              </View>
+              <Text style={styles.statLabel}>Posted</Text>
+              <Text style={styles.statValue}>{formatDate(job?.postedDate)}</Text>
+            </View>
+          </View>
+
+          {/* Job Description */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Job Description</Text>
+            <Text style={styles.description}>{job?.description}</Text>
+          </View>
+
+          {/* Requirements */}
+          {renderSection(
+            'Requirements',
+            job?.requirements || [],
+            <CheckCircle size={20} color="#10B981" />
+          )}
+
+          {/* Responsibilities */}
+          {renderSection(
+            'Responsibilities',
+            job?.responsibilities || [],
+            <Users size={20} color="#3B82F6" />
+          )}
+
+          {/* Benefits */}
+          {renderSection(
+            'Benefits',
+            job?.benefits || [],
+            <CheckCircle size={20} color="#F59E0B" />
+          )}
+
+          {/* Skills Required */}
+          {job?.skills && job.skills.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Skills Required</Text>
+              <View style={styles.skillsContainer}>
+                {job.skills.map((skill, index) => (
+                  <View key={index} style={styles.skillTag}>
+                    <Text style={styles.skillText}>{skill}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Additional Info */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Additional Information</Text>
+            <View style={styles.additionalInfo}>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Experience Required:</Text>
+                <Text style={styles.infoValue}>{job?.experience}</Text>
+              </View>
+              {job?.type === 'freelance' && job.duration && (
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>Project Duration:</Text>
+                  <Text style={styles.infoValue}>{job.duration}</Text>
+                </View>
+              )}
+            </View>
+          </View>
+
+          {/* Freelance Proposal Form */}
+         activeTab === "details" ? <View style={styles.formField}>
+            <Text style={styles.fieldLabel}>Hourly Rate *</Text>
+            <View style={styles.hourlyRateContainer}>
+              <Text style={styles.currencySymbol}>$</Text>
+              <TextInput
+                style={styles.hourlyRateInput}
+                placeholder="0"
+                value={hourlyRate}
+                onChangeText={setHourlyRate}
+                keyboardType="numeric"
+              />
+              <Text style={styles.rateUnit}>USD per hr.</Text>
+            </View>
+          (</View>
+
+          <View style={styles.formField}>
+            <Text style={styles.fieldLabel}>Address (Only your city and country will be shown publicly)</Text>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Enter your address"
+              value={address}
+              onChangeText={setAddress}
+            />
+          </View>):"null"
+       
+          <View style={styles.bottomSpacing} />
+        </ScrollView>
+      );
+    } else {
+      return (
+        <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
+          {proposalsLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#3B82F6" />
+              <Text style={styles.loadingText}>Loading proposals...</Text>
+            </View>
+          ) : (
+            <View style={styles.proposalsContainer}>
+              {proposals.map(renderProposalCard)}
+              {proposals.length === 0 && (
+                <View style={styles.noProposalsContainer}>
+                  <Text>No proposals yet</Text>
+                </View>
+              )}
+            </View>
+          )}
+          <View style={styles.bottomSpacing} />
+        </ScrollView>
+      );
+    }
   };
 
   if (loading) {
@@ -230,7 +510,6 @@ export default function JobDetailsScreen() {
             onPress={fetchJobDetails}
           >
             <Text style={styles.retryButtonText}>Try Again</Text>
-            <Text>{id}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -250,183 +529,149 @@ export default function JobDetailsScreen() {
           <ArrowLeft size={24} color="#374151" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{job.title}</Text>
-        {/* <View style={styles.headerActions}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={handleBookmark}
-          >
-            <Bookmark
-              size={20}
-              color={isBookmarked ? '#3B82F6' : '#6B7280'}
-              fill={isBookmarked ? '#3B82F6' : 'transparent'}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={handleShare}
-          >
-            <Share size={20} color="#6B7280" />
-          </TouchableOpacity>
-        </View> */}
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Job Header */}
-        <View style={styles.jobHeader}>
-          <View style={styles.companyLogo}>
-            <Building size={32} color="#6B7280" />
-          </View>
-          <View style={styles.jobInfo}>
-            {/* <Text style={styles.}>{job.title}</Text> */}
-            <Text style={styles.jobTitle}>{job.company}</Text>
+      {/* Job Header */}
+      <View style={styles.jobHeader}>
+        <View style={styles.companyLogo}>
+          <Building size={32} color="#6B7280" />
+        </View>
+        <View style={styles.jobInfo}>
+          <Text style={styles.jobTitle}>{job.company}</Text>
 
-            <View style={styles.jobMeta}>
-              <View style={styles.metaItem}>
-                <MapPin size={16} color="#6B7280" />
-                <Text style={styles.metaText}>{job.location}</Text>
-              </View>
-              <View
+          <View style={styles.jobMeta}>
+            <View style={styles.metaItem}>
+              <MapPin size={16} color="#6B7280" />
+              <Text style={styles.metaText}>{job.location}</Text>
+            </View>
+            <View
+              style={[
+                styles.typeBadge,
+                { backgroundColor: gettypeColor(job.type) + '20' },
+              ]}
+            >
+              <Text
                 style={[
-                  styles.jobTypeBadge,
-                  { backgroundColor: getJobTypeColor(job.type) + '20' },
+                  styles.typeText,
+                  { color: gettypeColor(job.type) },
                 ]}
               >
-                <Text
-                  style={[
-                    styles.jobTypeText,
-                    { color: getJobTypeColor(job.type) },
-                  ]}
-                >
-                  {job.type.replace('-', ' ').toUpperCase()}
-                </Text>
+                {job.type.replace('-', ' ').toUpperCase()}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
+      {/* Tabs for freelance Jobs */}
+      {job.type === 'freelance' && (
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'details' && styles.activeTab]}
+            onPress={() => setActiveTab('details')}
+          >
+            <Text style={[styles.tabText, activeTab === 'details' && styles.activeTabText]}>
+              Details
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === 'proposals' && styles.activeTab]}
+            onPress={() => setActiveTab('proposals')}
+          >
+            <Text style={[styles.tabText, activeTab === 'proposals' && styles.activeTabText]}>
+              Proposals
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Content */}
+      {job.type === 'freelance' ? (
+        renderTabContent()
+      ) : (
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Regular job content (existing code) */}
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <View style={styles.statIcon}>
+                <IndianRupee size={16} color="#3B82F6" />
               </View>
+              <Text style={styles.statLabel}>Salary</Text>
+              <Text style={styles.statValue}>{formatSalary(job.salary)}</Text>
+            </View>
+
+            <View style={styles.statItem}>
+              <View style={styles.statIcon}>
+                <Users size={16} color="#10B981" />
+              </View>
+              <Text style={styles.statLabel}>Applications</Text>
+              <Text style={styles.statValue}>{job.applications}</Text>
+            </View>
+
+            <View style={styles.statItem}>
+              <View style={styles.statIcon}>
+                <Clock size={16} color="#8B5CF6" />
+              </View>
+              <Text style={styles.statLabel}>Posted</Text>
+              <Text style={styles.statValue}>{formatDate(job.postedDate)}</Text>
             </View>
           </View>
-        </View>
 
-        {/* Job Stats */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <View style={styles.statIcon}>
-              <IndianRupee size={16} color="#3B82F6" />
-            </View>
-            <Text style={styles.statLabel}>Salary</Text>
-            <Text style={styles.statValue}>{formatSalary(job.salary)}</Text>
-          </View>
-
-          <View style={styles.statItem}>
-            <View style={styles.statIcon}>
-              <Users size={16} color="#10B981" />
-            </View>
-            <Text style={styles.statLabel}>Applications</Text>
-            <Text style={styles.statValue}>{job.applications}</Text>
-          </View>
-
-          {/* <View style={styles.statItem}>
-            <View style={styles.statIcon}>
-              <Eye size={16} color="#F59E0B" />
-            </View>
-            <Text style={styles.statLabel}>Views</Text>
-            <Text style={styles.statValue}>{job.views}</Text>
-          </View> */}
-
-          <View style={styles.statItem}>
-            <View style={styles.statIcon}>
-              <Clock size={16} color="#8B5CF6" />
-            </View>
-            <Text style={styles.statLabel}>Posted</Text>
-            <Text style={styles.statValue}>{formatDate(job.postedDate)}</Text>
-          </View>
-        </View>
-
-        {/* Job Description */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Job Description</Text>
-          <Text style={styles.description}>{job.description}</Text>
-        </View>
-
-        {/* Requirements */}
-        {renderSection(
-          'Requirements',
-          job.requirements,
-          <CheckCircle size={20} color="#10B981" />
-        )}
-
-        {/* Responsibilities */}
-        {renderSection(
-          'Responsibilities',
-          job.responsibilities,
-          <Users size={20} color="#3B82F6" />
-        )}
-
-        {/* Benefits */}
-        {renderSection(
-          'Benefits',
-          job.benefits,
-          <CheckCircle size={20} color="#F59E0B" />
-        )}
-
-        {/* Skills Required */}
-        {job.skills && job.skills.length > 0 && (
+          {/* Job Description */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Skills Required</Text>
-            <View style={styles.skillsContainer}>
-              {job.skills.map((skill, index) => (
-                <View key={index} style={styles.skillTag}>
-                  <Text style={styles.skillText}>{skill}</Text>
-                </View>
-              ))}
-            </View>
+            <Text style={styles.sectionTitle}>Job Description</Text>
+            <Text style={styles.description}>{job.description}</Text>
           </View>
-        )}
 
-        {/* Company Information */}
-        {/* {job.companyInfo && (
+          {/* Requirements */}
+          {renderSection(
+            'Requirements',
+            job.requirements,
+            <CheckCircle size={20} color="#10B981" />
+          )}
+
+          {/* Responsibilities */}
+          {renderSection(
+            'Responsibilities',
+            job.responsibilities,
+            <Users size={20} color="#3B82F6" />
+          )}
+
+          {/* Benefits */}
+          {renderSection(
+            'Benefits',
+            job.benefits,
+            <CheckCircle size={20} color="#F59E0B" />
+          )}
+
+          {/* Skills Required */}
+          {job.skills && job.skills.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Skills Required</Text>
+              <View style={styles.skillsContainer}>
+                {job.skills.map((skill, index) => (
+                  <View key={index} style={styles.skillTag}>
+                    <Text style={styles.skillText}>{skill}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* Additional Info */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>About the Company</Text>
-            <View style={styles.companyInfoCard}>
-              <View style={styles.companyHeader}>
-                <View style={styles.companyLogo}>
-                  <Building size={24} color="#6B7280" />
-                </View>
-                <View style={styles.companyDetails}>
-                  <Text style={styles.companyTitle}>{job.companyInfo.name}</Text>
-                  <Text style={styles.companySubtitle}>{job.companyInfo.industry}</Text>
-                </View>
-                {job.companyInfo.website && (
-                  <TouchableOpacity style={styles.websiteButton}>
-                    <ExternalLink size={16} color="#3B82F6" />
-                  </TouchableOpacity>
-                )}
-              </View>
-              
-              <Text style={styles.companyDescription}>{job.companyInfo.description}</Text>
-              
-              <View style={styles.companyMeta}>
-                <Text style={styles.companyMetaText}>Company Size: {job.companyInfo.size}</Text>
+            <Text style={styles.sectionTitle}>Additional Information</Text>
+            <View style={styles.additionalInfo}>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Experience Required:</Text>
+                <Text style={styles.infoValue}>{job.experience}</Text>
               </View>
             </View>
           </View>
-        )} */}
 
-        {/* Additional Info */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Additional Information</Text>
-          <View style={styles.additionalInfo}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Experience Required:</Text>
-              <Text style={styles.infoValue}>{job.experience}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Application Deadline:</Text>
-              {/* <Text style={styles.infoValue}>{formatDate(job.expiryDate)}</Text> */}
-            </View>
-          </View>
-        </View>
-
-        {/* Bottom Spacing */}
-        <View style={styles.bottomSpacing} />
-      </ScrollView>
+          <View style={styles.bottomSpacing} />
+        </ScrollView>
+      )}
 
       {/* Apply Button */}
       <View style={styles.applyContainer}>
@@ -438,10 +683,15 @@ export default function JobDetailsScreen() {
           {applying ? (
             <>
               <ActivityIndicator size="small" color="#FFFFFF" />
-              <Text style={styles.applyButtonText}>Applying...</Text>
+              <Text style={styles.applyButtonText}>
+                {job.type === 'freelance' ? 'Submitting...' : 'Applying...'}
+              </Text>
             </>
           ) : (
-            <Text style={styles.applyButtonText}>Apply for this Job</Text>
+            activeTab === 'proposals' ? " " : (
+            <Text style={styles.applyButtonText}>
+              {job.type === 'freelance' ? 'Submit Proposal' : 'Apply for this Job'}
+            </Text>)
           )}
         </TouchableOpacity>
       </View>
@@ -485,16 +735,10 @@ const styles = StyleSheet.create({
   headerActions: {
     flexDirection: 'row',
   },
-  actionButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#F3F4F6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
-  },
   content: {
+    flex: 1,
+  },
+  tabContent: {
     flex: 1,
   },
   loadingContainer: {
@@ -553,7 +797,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 20,
     backgroundColor: '#FFFFFF',
-    marginBottom: 16,
   },
   companyLogo: {
     width: 64,
@@ -574,11 +817,6 @@ const styles = StyleSheet.create({
     lineHeight: 28,
     marginBottom: 4,
   },
-  companyName: {
-    fontSize: 16,
-    color: '#6B7280',
-    marginBottom: 12,
-  },
   jobMeta: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -594,14 +832,202 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
   },
-  jobTypeBadge: {
+  typeBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
   },
-  jobTypeText: {
+  typeText: {
     fontSize: 12,
     fontWeight: '600',
+  },
+  // Tabs styles
+  tabsContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  activeTab: {
+    borderBottomColor: '#3B82F6',
+  },
+  tabText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
+  activeTabText: {
+    color: '#3B82F6',
+    fontWeight: '600',
+  },
+  // Proposals styles
+  proposalsContainer: {
+    backgroundColor: '#F9FAFB',
+    padding: 16,
+  },
+  proposalCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  proposalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  freelancerInfo: {
+    flexDirection: 'row',
+    flex: 1,
+  },
+  freelancerAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  avatarImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  freelancerDetails: {
+    flex: 1,
+  },
+  freelancerNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  freelancerName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginRight: 8,
+  },
+  freelancerStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  statText: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginLeft: 4,
+  },
+  countryText: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  proposalAmount: {
+    alignItems: 'flex-end',
+  },
+  bidAmount: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  deliveryTime: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  badgesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 12,
+  },
+  badge: {
+    fontSize: 12,
+    color: '#3B82F6',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginRight: 8,
+    marginBottom: 4,
+  },
+  coverLetter: {
+    fontSize: 14,
+    color: '#374151',
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  responseTime: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 12,
+  },
+  reportButton: {
+    alignSelf: 'flex-end',
+  },
+  reportButtonText: {
+    fontSize: 14,
+    color: '#3B82F6',
+    fontWeight: '500',
+  },
+  noProposalsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    paddingVertical: 60,
+    backgroundColor: '#FFFFFF',
+    margin: 16,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  noProposalsIconContainer: {
+    width: 80,
+    height: 80,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  noProposalsTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  noProposalsSubtitle: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 16,
+  },
+  noProposalsHint: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    lineHeight: 20,
+    fontStyle: 'italic',
   },
   statsContainer: {
     flexDirection: 'row',
@@ -694,54 +1120,6 @@ const styles = StyleSheet.create({
     color: '#3B82F6',
     fontWeight: '500',
   },
-  companyInfoCard: {
-    marginTop: 12,
-    padding: 16,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
-  },
-  companyHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  companyDetails: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  companyTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  companySubtitle: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginTop: 2,
-  },
-  websiteButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: '#EFF6FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  companyDescription: {
-    fontSize: 14,
-    color: '#374151',
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  companyMeta: {
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-  },
-  companyMetaText: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
   additionalInfo: {
     marginTop: 12,
   },
@@ -765,6 +1143,7 @@ const styles = StyleSheet.create({
   bottomSpacing: {
     height: 100,
   },
+
   applyContainer: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 20,
@@ -796,4 +1175,54 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginLeft: 8,
   },
+    textInput: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: '#111827',
+    backgroundColor: '#F9FAFB',
+  },
+
+   formField: {
+    marginBottom: 16,
+  },
+   fieldLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 8,
+  },
+    hourlyRateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+  },
+   currencySymbol: {
+    fontSize: 16,
+    color: '#374151',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: '#F3F4F6',
+    borderTopLeftRadius: 8,
+    borderBottomLeftRadius: 8,
+  },
+    hourlyRateInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#111827',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+  },
+  rateUnit: {
+    fontSize: 16,
+    color: '#6B7280',
+    paddingHorizontal: 12,
+  },
+
 });
