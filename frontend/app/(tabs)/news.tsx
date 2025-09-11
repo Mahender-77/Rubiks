@@ -432,6 +432,7 @@ export default function JobNewsApp() {
   const newsDataRef = useRef<NewsItem[]>(newsData);
   const isHandlingSwipe = useRef<boolean>(false);
 
+  const [expanded, setExpanded] = useState(false);
   useEffect(() => {
     currentIndexRef.current = currentIndex;
   }, [currentIndex]);
@@ -706,7 +707,19 @@ export default function JobNewsApp() {
       <View style={styles.contentSection}>
         <View style={styles.content}>
           <Text style={styles.title}>{currentNews.title}</Text>
-          <Text style={styles.summary}>{currentNews.summary}</Text>
+          <Text
+        style={styles.summary}
+        numberOfLines={expanded ? undefined : 5} // Limit to 3 lines when not expanded
+      >
+        {currentNews.summary}
+      </Text>
+      {currentNews.summary.length > 100 && ( // show "Read more" only if content is long
+        <TouchableOpacity onPress={() => setExpanded(!expanded)}>
+          <Text style={styles.readMore}>
+            {expanded ? "Read less" : "... Read more"}
+          </Text>
+        </TouchableOpacity>
+      )}
 
           {/* Meta */}
           <View style={styles.meta}>
@@ -872,13 +885,19 @@ const styles = StyleSheet.create({
     color: "#87CEEB",
     fontWeight: "500",
   },
-  summary: {
-    color: "#5D6D7E",
-    fontSize: 16,
-    lineHeight: 22,
-    marginBottom: 16,
-    flex: 1,
-  },
+summary: {
+  color: "#5D6D7E",
+  fontSize: 16,
+  lineHeight: 22,
+  marginBottom: 8,
+},
+readMore: {
+  color: "#87CEEB",
+  fontSize: 14,
+  fontWeight: "600",
+  marginTop: -8,
+},
+
   meta: {
     flexDirection: "row",
     marginBottom: 20,
