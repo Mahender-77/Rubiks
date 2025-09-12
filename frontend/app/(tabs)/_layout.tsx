@@ -46,7 +46,7 @@ export default function TabLayout() {
             colorScheme === 'light' ? '#adb6c4ff' : '#888888',
           tabBarStyle: {
             backgroundColor: Colors[colorScheme].darkText,
-            borderTopWidth: 1,
+            // borderTopWidth: 1,
             borderTopColor: Colors[colorScheme].borderColor,
             paddingBottom: 8,
             paddingTop: 8,

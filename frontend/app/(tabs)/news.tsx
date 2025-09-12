@@ -715,7 +715,7 @@ export default function JobNewsApp() {
           </Text>
           {currentNews.summary.length > 100 && (
             <TouchableOpacity onPress={() => setExpanded(!expanded)}>
-              <Text style={[styles.readMore, { color: theme.tint }]}>
+              <Text style={[styles.readMore, { color: theme.primary }]}>
                 {expanded ? "Read less" : "... Read more"}
               </Text>
             </TouchableOpacity>
@@ -724,14 +724,14 @@ export default function JobNewsApp() {
           {/* Meta */}
           <View style={styles.meta}>
             <View style={styles.metaItem}>
-              <Clock color={theme.tint} size={14} />
-              <Text style={[styles.metaText, { color: theme.tint }]}>
+              <Clock color={theme.primary} size={14} />
+              <Text style={[styles.metaText, { color: theme.primary }]}>
                 {currentNews.readTime}
               </Text>
             </View>
             <View style={styles.metaItem}>
-              <Heart color={theme.tint} size={14} />
-              <Text style={[styles.metaText, { color: theme.tint }]}>
+              <Heart color={theme.primary} size={14} />
+              <Text style={[styles.metaText, { color: theme.primary }]}>
                 {formatNumber(currentNews.likes)} likes
               </Text>
             </View>

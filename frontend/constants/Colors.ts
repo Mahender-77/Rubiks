@@ -8,6 +8,11 @@ export default {
     background: '#F9FAFB',
     lightBackground: '#F3F4F6', // light gray background for cards and other elements
     primary: '#1C1C1E',
+    tint: '#2563EB',
+    cardBackGround: '#FFFFFF',
+    card: '#FFFFFF',
+    button: '#2563EB',
+    buttonText: '#FFFFFF',
   },
   dark: {
     text: '#F3F4F6',
@@ -16,7 +21,12 @@ export default {
     errorText: '#EF4444',
     borderColor: '#374151',
     background: '#111827',
+    tint: '#3B82F6',
     lightBackground: '#1E1E1E',
     primary: '#3B82F6',
+    cardBackGround: '#1F2937',
+    card: '#1F2937',
+    button: '#3B82F6',
+    buttonText: '#FFFFFF',
   },
 };
