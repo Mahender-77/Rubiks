@@ -8,6 +8,7 @@ import {
   Image,
   Alert,
   TextInput,
+  useColorScheme,
 } from 'react-native';
 
 import { useRouter } from 'expo-router';
@@ -29,10 +30,15 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import ResumeModal from '../../../components/ResumeModel';
 import { useAuth } from '../../../contexts/AuthContext';
+import Colors from '../../../constants/Colors';
 
 export default function ProfileScreen() {
-  const { user, logout, updateAvatar, updateProfile, updateContact } = useAuth();
+  const { user, logout, updateAvatar, updateProfile, updateContact } =
+    useAuth();
   const router = useRouter();
+
+  const colorScheme = useColorScheme() ?? 'light';
+  const theme = Colors[colorScheme];
 
   // Resume Modal State
   const [showResume, setShowResume] = useState(false);
@@ -45,7 +51,7 @@ export default function ProfileScreen() {
     phone: user?.phone || '',
     headline: user?.profile?.headline || '',
     location: user?.profile?.location || '',
-    url: user?.profile?.url || ''
+    url: user?.profile?.url || '',
   });
 
   // About Section State
@@ -62,7 +68,7 @@ export default function ProfileScreen() {
     startDate: '',
     endDate: '',
     current: false,
-    description: ''
+    description: '',
   });
 
   // Education Section State
@@ -74,7 +80,7 @@ export default function ProfileScreen() {
     startDate: '',
     endDate: '',
     current: false,
-    gpa: ''
+    gpa: '',
   });
 
   // Skills Section State
@@ -91,9 +97,12 @@ export default function ProfileScreen() {
     if (user?.name && user?.email && user?.phone) completedSections += 1;
     if (user?.profile?.headline) completedSections += 1;
     if (user?.profile?.bio) completedSections += 1;
-    if (user?.profile?.experience && user.profile.experience.length > 0) completedSections += 1;
-    if (user?.profile?.education && user.profile.education.length > 0) completedSections += 1;
-    if (user?.profile?.skills && user.profile.skills.length > 0) completedSections += 1;
+    if (user?.profile?.experience && user.profile.experience.length > 0)
+      completedSections += 1;
+    if (user?.profile?.education && user.profile.education.length > 0)
+      completedSections += 1;
+    if (user?.profile?.skills && user.profile.skills.length > 0)
+      completedSections += 1;
 
     return Math.round((completedSections / totalSections) * 100);
   };
@@ -114,21 +123,17 @@ export default function ProfileScreen() {
 
   // Image handling functions
   const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: () => {
-            logout();
-            router.replace('/(auth)/login');
-          },
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: () => {
+          logout();
+          router.replace('/(auth)/login');
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const pickImage = async () => {
@@ -154,7 +159,10 @@ export default function ProfileScreen() {
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Camera permission is required to take a photo.');
+      Alert.alert(
+        'Permission needed',
+        'Camera permission is required to take a photo.'
+      );
       return;
     }
 
@@ -177,15 +185,11 @@ export default function ProfileScreen() {
   };
 
   const showImageOptions = () => {
-    Alert.alert(
-      'Update Profile Photo',
-      'Choose an option',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Take Photo', onPress: takePhoto },
-        { text: 'Choose from Library', onPress: pickImage },
-      ]
-    );
+    Alert.alert('Update Profile Photo', 'Choose an option', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Take Photo', onPress: takePhoto },
+      { text: 'Choose from Library', onPress: pickImage },
+    ]);
   };
 
   // Delete functions
@@ -248,7 +252,7 @@ export default function ProfileScreen() {
           style: 'destructive',
           onPress: async () => {
             const updatedSkills = (user?.profile?.skills || []).filter(
-              skill => skill !== skillToDelete
+              (skill) => skill !== skillToDelete
             );
             const resp = await updateProfile({ skills: updatedSkills });
             if (resp.success) {
@@ -265,9 +269,7 @@ export default function ProfileScreen() {
   // Utility renderer functions
   const renderEmptySection = (title, icon, onPress) => (
     <TouchableOpacity style={styles.emptySection} onPress={onPress}>
-      <View style={styles.emptySectionIcon}>
-        {icon}
-      </View>
+      <View style={styles.emptySectionIcon}>{icon}</View>
       <Text style={styles.emptySectionTitle}>{title}</Text>
       <Text style={styles.emptySectionSubtitle}>Tap to add</Text>
       <View style={styles.addButton}>
@@ -280,79 +282,148 @@ export default function ProfileScreen() {
   const renderProfileInfo = () => {
     if (isEditingProfile) {
       return (
-        <View style={styles.section}>
+        <View
+          style={[
+            styles.section,
+            { backgroundColor: theme.background },
+            { borderColor: theme.borderColor },
+          ]}
+        >
           <View style={styles.sectionHeader}>
-            <View style={styles.sectionIcon}>
-              <User size={20} color="#000000" />
+            <View
+              style={[
+                styles.sectionIcon,
+                { backgroundColor: theme.background },
+              ]}
+            >
+              <User size={20} color={theme.subText} />
             </View>
-            <Text style={styles.sectionTitle}>Profile Information</Text>
-            <TouchableOpacity onPress={() => {
-              setIsEditingProfile(false);
-              setProfileDraft({
-                name: user?.name || '',
-                email: user?.email || '',
-                phone: user?.phone || '',
-                headline: user?.profile?.headline || '',
-                location: user?.profile?.location || '',
-                url: user?.profile?.url || ''
-              });
-            }}>
-              <X size={20} color="#000000" />
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+              Profile Information
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                setIsEditingProfile(false);
+                setProfileDraft({
+                  name: user?.name || '',
+                  email: user?.email || '',
+                  phone: user?.phone || '',
+                  headline: user?.profile?.headline || '',
+                  location: user?.profile?.location || '',
+                  url: user?.profile?.url || '',
+                });
+              }}
+            >
+              <X size={20} color={theme.text} />
             </TouchableOpacity>
           </View>
           <View style={styles.formContainer}>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Full Name</Text>
+              <Text style={[styles.inputLabel, { color: theme.text }]}>
+                Full Name
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  { borderColor: theme.borderColor },
+                  { color: theme.text },
+                  { backgroundColor: theme.background },
+                ]}
                 value={profileDraft.name}
-                onChangeText={(text) => setProfileDraft({...profileDraft, name: text})}
+                onChangeText={(text) =>
+                  setProfileDraft({ ...profileDraft, name: text })
+                }
                 placeholder="Enter your full name"
               />
             </View>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Professional Headline</Text>
+              <Text style={[styles.inputLabel, { color: theme.text }]}>
+                Professional Headline
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  { borderColor: theme.borderColor },
+                  { color: theme.text },
+                  { backgroundColor: theme.background },
+                ]}
                 value={profileDraft.headline}
-                onChangeText={(text) => setProfileDraft({...profileDraft, headline: text})}
+                onChangeText={(text) =>
+                  setProfileDraft({ ...profileDraft, headline: text })
+                }
                 placeholder="e.g. Software Engineer at Google"
               />
             </View>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Email</Text>
+              <Text style={[styles.inputLabel, { color: theme.text }]}>
+                Email
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  { borderColor: theme.borderColor },
+                  { color: theme.text },
+                  { backgroundColor: theme.background },
+                ]}
                 value={profileDraft.email}
-                onChangeText={(text) => setProfileDraft({...profileDraft, email: text})}
+                onChangeText={(text) =>
+                  setProfileDraft({ ...profileDraft, email: text })
+                }
                 placeholder="Enter email"
                 keyboardType="email-address"
               />
             </View>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Phone</Text>
+              <Text style={[styles.inputLabel, { color: theme.text }]}>
+                Phone
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  { borderColor: theme.borderColor },
+                  { color: theme.text },
+                  { backgroundColor: theme.background },
+                ]}
                 value={profileDraft.phone}
-                onChangeText={(text) => setProfileDraft({...profileDraft, phone: text})}
+                onChangeText={(text) =>
+                  setProfileDraft({ ...profileDraft, phone: text })
+                }
                 placeholder="Enter phone number"
               />
             </View>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Location</Text>
+              <Text style={[styles.inputLabel, { color: theme.text }]}>
+                Location
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  { borderColor: theme.borderColor },
+                  { color: theme.text },
+                  { backgroundColor: theme.background },
+                ]}
                 value={profileDraft.location}
-                onChangeText={(text) => setProfileDraft({...profileDraft, location: text})}
+                onChangeText={(text) =>
+                  setProfileDraft({ ...profileDraft, location: text })
+                }
                 placeholder="Enter location"
               />
             </View>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>URL (Portfolio/LinkedIn/GitHub/etc.)</Text>
+              <Text style={[styles.inputLabel, { color: theme.text }]}>
+                URL (Portfolio/LinkedIn/GitHub/etc.)
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  { borderColor: theme.borderColor },
+                  { color: theme.text },
+                  { backgroundColor: theme.background },
+                ]}
                 value={profileDraft.url}
-                onChangeText={(text) => setProfileDraft({...profileDraft, url: text})}
+                onChangeText={(text) =>
+                  setProfileDraft({ ...profileDraft, url: text })
+                }
                 placeholder="https://your-portfolio.com"
                 keyboardType="url"
               />
@@ -369,7 +440,7 @@ export default function ProfileScreen() {
                   phone: user?.phone || '',
                   headline: user?.profile?.headline || '',
                   location: user?.profile?.location || '',
-                  url: user?.profile?.url || ''
+                  url: user?.profile?.url || '',
                 });
               }}
             >
@@ -383,7 +454,7 @@ export default function ProfileScreen() {
                   phone: profileDraft.phone,
                   headline: profileDraft.headline,
                   location: profileDraft.location,
-                  url: profileDraft.url
+                  url: profileDraft.url,
                 });
                 if (resp.success) {
                   setIsEditingProfile(false);
@@ -402,40 +473,59 @@ export default function ProfileScreen() {
     }
 
     return (
-      <View style={styles.section}>
+      <View style={[styles.section, { borderColor: theme.borderColor }]}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionIcon}>
-            <User size={20} color="#000000" />
+            <User size={20} color={theme.text} />
           </View>
-          <Text style={styles.sectionTitle}>Profile Information</Text>
-          <TouchableOpacity style={styles.editButton} onPress={() => setIsEditingProfile(true)}>
-            <Edit size={16} color="#000000" />
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>
+            Profile Information
+          </Text>
+          <TouchableOpacity
+            style={[
+              styles.editButton,
+              { borderColor: theme.background },
+              { backgroundColor: theme.background },
+            ]}
+            onPress={() => setIsEditingProfile(true)}
+          >
+            <Edit size={16} color={theme.text} />
           </TouchableOpacity>
         </View>
         <View style={styles.profileInfoDisplay}>
           <View style={styles.profileInfoRow}>
-            <Text style={styles.profileInfoLabel}>Name</Text>
-            <Text style={styles.profileInfoValue}>{user?.name || 'Not set'}</Text>
+            <Text style={[styles.profileInfoLabel,{color:theme.text}]}>Name</Text>
+            <Text style={styles.profileInfoValue}>
+              {user?.name || 'Not set'}
+            </Text>
           </View>
           <View style={styles.profileInfoRow}>
-            <Text style={styles.profileInfoLabel}>Headline</Text>
-            <Text style={styles.profileInfoValue}>{user?.profile?.headline || 'Not set'}</Text>
+            <Text style={[styles.profileInfoLabel,{color:theme.text}]}>Headline</Text>
+            <Text style={styles.profileInfoValue}>
+              {user?.profile?.headline || 'Not set'}
+            </Text>
           </View>
           <View style={styles.profileInfoRow}>
-            <Text style={styles.profileInfoLabel}>Email</Text>
-            <Text style={styles.profileInfoValue}>{user?.email || 'Not set'}</Text>
+            <Text style={[styles.profileInfoLabel,{color:theme.text}]}>Email</Text>
+            <Text style={styles.profileInfoValue}>
+              {user?.email || 'Not set'}
+            </Text>
           </View>
           <View style={styles.profileInfoRow}>
-            <Text style={styles.profileInfoLabel}>Phone</Text>
-            <Text style={styles.profileInfoValue}>{user?.phone || 'Not set'}</Text>
+            <Text style={[styles.profileInfoLabel,{color:theme.text}]}>Phone</Text>
+            <Text style={styles.profileInfoValue}>
+              {user?.phone || 'Not set'}
+            </Text>
           </View>
           <View style={styles.profileInfoRow}>
-            <Text style={styles.profileInfoLabel}>Location</Text>
-            <Text style={styles.profileInfoValue}>{user?.profile?.location || 'Not set'}</Text>
+            <Text style={[styles.profileInfoLabel,{color:theme.text}]}>Location</Text>
+            <Text style={styles.profileInfoValue}>
+              {user?.profile?.location || 'Not set'}
+            </Text>
           </View>
           {user?.profile?.url && (
             <View style={styles.profileInfoRow}>
-              <Text style={styles.profileInfoLabel}>URL</Text>
+              <Text style={[styles.profileInfoLabel,{color:theme.text}]}>URL</Text>
               <Text style={styles.profileInfoValue}>{user.profile.url}</Text>
             </View>
           )}
@@ -448,22 +538,30 @@ export default function ProfileScreen() {
   const renderAbout = () => {
     if (isAddingAbout || isEditingAbout) {
       return (
-        <View style={styles.section}>
+        <View style={[
+            styles.section,
+            { backgroundColor: theme.background },
+            { borderColor: theme.borderColor },
+          ]}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIcon}>
-              <User size={20} color="#000000" />
+              <User size={20} color={theme.text} />
             </View>
-            <Text style={styles.sectionTitle}>About</Text>
-            <TouchableOpacity onPress={() => {
-              setIsAddingAbout(false);
-              setIsEditingAbout(false);
-              setAboutDraft(user?.profile?.bio || '');
-            }}>
-              <X size={20} color="#000000" />
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+              About
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                setIsAddingAbout(false);
+                setIsEditingAbout(false);
+                setAboutDraft(user?.profile?.bio || '');
+              }}
+            >
+              <X size={20} color={theme.text} />
             </TouchableOpacity>
           </View>
           <TextInput
-            style={styles.aboutInput}
+            style={[styles.aboutInput,{backgroundColor:theme.background},{color:theme.text},{borderColor:theme.borderColor}]}
             value={aboutDraft}
             onChangeText={setAboutDraft}
             placeholder="Tell us about yourself..."
@@ -483,7 +581,7 @@ export default function ProfileScreen() {
               <Text style={styles.cancelBtnText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.saveBtn}
+              style={[styles.saveBtn, { backgroundColor: theme.primary }]}
               onPress={async () => {
                 const text = aboutDraft.trim();
                 if (!text) {
@@ -494,14 +592,19 @@ export default function ProfileScreen() {
                 if (resp.success) {
                   setIsAddingAbout(false);
                   setIsEditingAbout(false);
-                  Alert.alert('Success', isEditingAbout ? 'About updated' : 'About added');
+                  Alert.alert(
+                    'Success',
+                    isEditingAbout ? 'About updated' : 'About added'
+                  );
                 } else {
                   Alert.alert('Error', resp.message || 'Failed to save');
                 }
               }}
             >
               <Save size={16} color="#FFFFFF" />
-              <Text style={styles.saveBtnText}>{isEditingAbout ? 'Update' : 'Add'}</Text>
+              <Text style={[styles.saveBtnText]}>
+                {isEditingAbout ? 'Update' : 'Add'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -510,27 +613,41 @@ export default function ProfileScreen() {
 
     if (user?.profile?.bio) {
       return (
-        <View style={styles.section}>
+        <View style={[
+            styles.section,
+            { backgroundColor: theme.background },
+            { borderColor: theme.borderColor },
+          ]}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIcon}>
-              <User size={20} color="#000000" />
+              <User size={20} color={theme.text} />
             </View>
-            <Text style={styles.sectionTitle}>About</Text>
-            <TouchableOpacity style={styles.editButton} onPress={() => {
-              setIsEditingAbout(true);
-              setAboutDraft(user?.profile?.bio || '');
-            }}>
-              <Edit size={16} color="#000000" />
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+              About
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.editButton,
+                { borderColor: theme.background },
+                { backgroundColor: theme.background },
+               
+              ]}
+              onPress={() => {
+                setIsEditingAbout(true);
+                setAboutDraft(user?.profile?.bio || '');
+              }}
+            >
+              <Edit size={16} color={theme.text} />
             </TouchableOpacity>
           </View>
-          <Text style={styles.bioText}>{user.profile.bio}</Text>
+          <Text style={[styles.bioText,{color:theme.subText}]}>{user.profile.bio}</Text>
         </View>
       );
     }
 
     return renderEmptySection(
       'Add About',
-      <User size={24} color="#000000" />,
+      <User size={24} color={theme.text} />,
       () => {
         setIsAddingAbout(true);
         setAboutDraft('');
@@ -542,82 +659,139 @@ export default function ProfileScreen() {
   const renderExperience = () => {
     if (isAddingExperience) {
       return (
-        <View style={styles.section}>
+        <View style={[
+            styles.section,
+            { backgroundColor: theme.background },
+            { borderColor: theme.borderColor },
+          ]}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIcon}>
-              <Briefcase size={20} color="#000000" />
+              <Briefcase size={20} color={theme.text} />
             </View>
-            <Text style={styles.sectionTitle}>Experience</Text>
-            <TouchableOpacity onPress={() => {
-              setIsAddingExperience(false);
-              setExperienceDraft({
-                title: '',
-                company: '',
-                location: '',
-                startDate: '',
-                endDate: '',
-                current: false,
-                description: ''
-              });
-            }}>
-              <X size={20} color="#000000" />
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+              Experience
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                setIsAddingExperience(false);
+                setExperienceDraft({
+                  title: '',
+                  company: '',
+                  location: '',
+                  startDate: '',
+                  endDate: '',
+                  current: false,
+                  description: '',
+                });
+              }}
+            >
+              <X size={20} color={theme.text} />
             </TouchableOpacity>
           </View>
           <View style={styles.formContainer}>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Job Title</Text>
+              <Text style={[styles.inputLabel, { color: theme.text }]}>
+                Job Title
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  { borderColor: theme.borderColor },
+                  { color: theme.text },
+                  { backgroundColor: theme.background },
+                ]}
                 value={experienceDraft.title}
-                onChangeText={(text) => setExperienceDraft({...experienceDraft, title: text})}
+                onChangeText={(text) =>
+                  setExperienceDraft({ ...experienceDraft, title: text })
+                }
                 placeholder="e.g. Software Engineer"
               />
             </View>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Company</Text>
+              <Text style={[styles.inputLabel, { color: theme.text }]}>
+                Company
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  { borderColor: theme.borderColor },
+                  { color: theme.text },
+                  { backgroundColor: theme.background },
+                ]}
                 value={experienceDraft.company}
-                onChangeText={(text) => setExperienceDraft({...experienceDraft, company: text})}
+                onChangeText={(text) =>
+                  setExperienceDraft({ ...experienceDraft, company: text })
+                }
                 placeholder="e.g. Google"
               />
             </View>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Location</Text>
+              <Text style={[styles.inputLabel, { color: theme.text }]}>
+                Location
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  { borderColor: theme.borderColor },
+                  { color: theme.text },
+                  { backgroundColor: theme.background },
+                ]}
                 value={experienceDraft.location}
-                onChangeText={(text) => setExperienceDraft({...experienceDraft, location: text})}
+                onChangeText={(text) =>
+                  setExperienceDraft({ ...experienceDraft, location: text })
+                }
                 placeholder="e.g. San Francisco, CA"
               />
             </View>
             <View style={styles.row}>
-              <View style={[styles.inputGroup, {flex: 1, marginRight: 8}]}>
-                <Text style={styles.inputLabel}>Start Date</Text>
+              <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+                <Text style={[styles.inputLabel, { color: theme.text }]}>
+                  Start Date
+                </Text>
                 <TextInput
-                  style={styles.input}
+                  style={[
+                    styles.input,
+                    { borderColor: theme.borderColor },
+                    { color: theme.text },
+                    { backgroundColor: theme.background },
+                  ]}
                   value={experienceDraft.startDate}
-                  onChangeText={(text) => setExperienceDraft({...experienceDraft, startDate: text})}
+                  onChangeText={(text) =>
+                    setExperienceDraft({ ...experienceDraft, startDate: text })
+                  }
                   placeholder="MM/YYYY"
                 />
               </View>
-              <View style={[styles.inputGroup, {flex: 1, marginLeft: 8}]}>
-                <Text style={styles.inputLabel}>End Date</Text>
+              <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+                <Text style={[styles.inputLabel, { color: theme.text }]}>
+                  End Date
+                </Text>
                 <TextInput
-                  style={styles.input}
+                  style={[
+                    styles.input,
+                    { borderColor: theme.borderColor },
+                    { color: theme.text },
+                    { backgroundColor: theme.background },
+                  ]}
                   value={experienceDraft.endDate}
-                  onChangeText={(text) => setExperienceDraft({...experienceDraft, endDate: text})}
+                  onChangeText={(text) =>
+                    setExperienceDraft({ ...experienceDraft, endDate: text })
+                  }
                   placeholder="MM/YYYY"
                   editable={!experienceDraft.current}
                 />
               </View>
             </View>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Description</Text>
+              <Text style={[styles.inputLabel, { color: theme.text }]}>
+                Description
+              </Text>
               <TextInput
-                style={[styles.input, {minHeight: 80}]}
+                style={[styles.input, { minHeight: 80 },{backgroundColor:theme.background},{color:theme.text},{borderColor:theme.borderColor}]}
                 value={experienceDraft.description}
-                onChangeText={(text) => setExperienceDraft({...experienceDraft, description: text})}
+                onChangeText={(text) =>
+                  setExperienceDraft({ ...experienceDraft, description: text })
+                }
                 placeholder="Describe your role and achievements..."
                 multiline
                 numberOfLines={4}
@@ -637,7 +811,7 @@ export default function ProfileScreen() {
                   startDate: '',
                   endDate: '',
                   current: false,
-                  description: ''
+                  description: '',
                 });
               }}
             >
@@ -652,10 +826,13 @@ export default function ProfileScreen() {
                 }
                 const newExperience = {
                   ...experienceDraft,
-                  current: experienceDraft.current || !experienceDraft.endDate
+                  current: experienceDraft.current || !experienceDraft.endDate,
                 };
-                const resp = await updateProfile({ 
-                  experience: [...(user?.profile?.experience || []), newExperience]
+                const resp = await updateProfile({
+                  experience: [
+                    ...(user?.profile?.experience || []),
+                    newExperience,
+                  ],
                 });
                 if (resp.success) {
                   setIsAddingExperience(false);
@@ -666,7 +843,7 @@ export default function ProfileScreen() {
                     startDate: '',
                     endDate: '',
                     current: false,
-                    description: ''
+                    description: '',
                   });
                   Alert.alert('Success', 'Experience added');
                 } else {
@@ -684,13 +861,22 @@ export default function ProfileScreen() {
 
     if (user?.profile?.experience && user.profile.experience.length > 0) {
       return (
-        <View style={styles.section}>
+        <View style={[
+            styles.section,
+            { backgroundColor: theme.background },
+            { borderColor: theme.borderColor },
+          ]}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIcon}>
-              <Briefcase size={20} color="#000000" />
+              <Briefcase size={20} color={theme.text} />
             </View>
-            <Text style={styles.sectionTitle}>Experience</Text>
-            <TouchableOpacity style={styles.addButton} onPress={() => setIsAddingExperience(true)}>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+              Experience
+            </Text>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => setIsAddingExperience(true)}
+            >
               <Plus size={16} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
@@ -713,7 +899,9 @@ export default function ProfileScreen() {
                   </TouchableOpacity>
                 </View>
                 {exp.description && (
-                  <Text style={styles.experienceDescription}>{exp.description}</Text>
+                  <Text style={styles.experienceDescription}>
+                    {exp.description}
+                  </Text>
                 )}
               </View>
             ))}
@@ -733,82 +921,144 @@ export default function ProfileScreen() {
   const renderEducation = () => {
     if (isAddingEducation) {
       return (
-        <View style={styles.section}>
+        <View style={[
+            styles.section,
+            { backgroundColor: theme.background },
+            { borderColor: theme.borderColor },
+          ]}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIcon}>
-              <GraduationCap size={20} color="#000000" />
+              <GraduationCap size={20} color={theme.text} />
             </View>
-            <Text style={styles.sectionTitle}>Education</Text>
-            <TouchableOpacity onPress={() => {
-              setIsAddingEducation(false);
-              setEducationDraft({
-                degree: '',
-                institution: '',
-                field: '',
-                startDate: '',
-                endDate: '',
-                current: false,
-                gpa: ''
-              });
-            }}>
-              <X size={20} color="#000000" />
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+              Education
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                setIsAddingEducation(false);
+                setEducationDraft({
+                  degree: '',
+                  institution: '',
+                  field: '',
+                  startDate: '',
+                  endDate: '',
+                  current: false,
+                  gpa: '',
+                });
+              }}
+            >
+              <X size={20} color={theme.text} />
             </TouchableOpacity>
           </View>
           <View style={styles.formContainer}>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Degree</Text>
+              <Text style={[styles.inputLabel, { color: theme.text }]}>
+                Degree
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  { borderColor: theme.borderColor },
+                  { color: theme.text },
+                  { backgroundColor: theme.background },
+                ]}
                 value={educationDraft.degree}
-                onChangeText={(text) => setEducationDraft({...educationDraft, degree: text})}
+                onChangeText={(text) =>
+                  setEducationDraft({ ...educationDraft, degree: text })
+                }
                 placeholder="e.g. Bachelor of Science"
               />
             </View>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Institution</Text>
+              <Text style={[styles.inputLabel, { color: theme.text }]}>
+                Institution
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  { borderColor: theme.borderColor },
+                  { color: theme.text },
+                  { backgroundColor: theme.background },
+                ]}
                 value={educationDraft.institution}
-                onChangeText={(text) => setEducationDraft({...educationDraft, institution: text})}
+                onChangeText={(text) =>
+                  setEducationDraft({ ...educationDraft, institution: text })
+                }
                 placeholder="e.g. Stanford University"
               />
             </View>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Field of Study</Text>
+              <Text style={[styles.inputLabel, { color: theme.text }]}>
+                Field of Study
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  { borderColor: theme.borderColor },
+                  { color: theme.text },
+                  { backgroundColor: theme.background },
+                ]}
                 value={educationDraft.field}
-                onChangeText={(text) => setEducationDraft({...educationDraft, field: text})}
+                onChangeText={(text) =>
+                  setEducationDraft({ ...educationDraft, field: text })
+                }
                 placeholder="e.g. Computer Science"
               />
             </View>
             <View style={styles.row}>
-              <View style={[styles.inputGroup, {flex: 1, marginRight: 8}]}>
-                <Text style={styles.inputLabel}>Start Date</Text>
+              <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+                <Text style={[styles.inputLabel, { color: theme.text }]}>
+                  Start Date
+                </Text>
                 <TextInput
-                  style={styles.input}
+                  style={[
+                    styles.input,
+                    { borderColor: theme.borderColor },
+                    { color: theme.text },
+                    { backgroundColor: theme.background },
+                  ]}
                   value={educationDraft.startDate}
-                  onChangeText={(text) => setEducationDraft({...educationDraft, startDate: text})}
+                  onChangeText={(text) =>
+                    setEducationDraft({ ...educationDraft, startDate: text })
+                  }
                   placeholder="MM/YYYY"
                 />
               </View>
-              <View style={[styles.inputGroup, {flex: 1, marginLeft: 8}]}>
-                <Text style={styles.inputLabel}>End Date</Text>
+              <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+                <Text style={[styles.inputLabel, { color: theme.text }]}>
+                  End Date
+                </Text>
                 <TextInput
-                  style={styles.input}
+                  style={[
+                    styles.input,
+                    { borderColor: theme.borderColor },
+                    { color: theme.text },
+                    { backgroundColor: theme.background },
+                  ]}
                   value={educationDraft.endDate}
-                  onChangeText={(text) => setEducationDraft({...educationDraft, endDate: text})}
+                  onChangeText={(text) =>
+                    setEducationDraft({ ...educationDraft, endDate: text })
+                  }
                   placeholder="MM/YYYY"
                   editable={!educationDraft.current}
                 />
               </View>
             </View>
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>GPA (Optional)</Text>
+              <Text style={[styles.inputLabel, { color: theme.text }]}>
+                GPA (Optional)
+              </Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  { borderColor: theme.borderColor },
+                  { color: theme.text },
+                  { backgroundColor: theme.background },
+                ]}
                 value={educationDraft.gpa}
-                onChangeText={(text) => setEducationDraft({...educationDraft, gpa: text})}
+                onChangeText={(text) =>
+                  setEducationDraft({ ...educationDraft, gpa: text })
+                }
                 placeholder="e.g. 3.8"
                 keyboardType="numeric"
               />
@@ -826,7 +1076,7 @@ export default function ProfileScreen() {
                   startDate: '',
                   endDate: '',
                   current: false,
-                  gpa: ''
+                  gpa: '',
                 });
               }}
             >
@@ -841,10 +1091,13 @@ export default function ProfileScreen() {
                 }
                 const newEducation = {
                   ...educationDraft,
-                  current: educationDraft.current || !educationDraft.endDate
+                  current: educationDraft.current || !educationDraft.endDate,
                 };
-                const resp = await updateProfile({ 
-                  education: [...(user?.profile?.education || []), newEducation]
+                const resp = await updateProfile({
+                  education: [
+                    ...(user?.profile?.education || []),
+                    newEducation,
+                  ],
                 });
                 if (resp.success) {
                   setIsAddingEducation(false);
@@ -855,7 +1108,7 @@ export default function ProfileScreen() {
                     startDate: '',
                     endDate: '',
                     current: false,
-                    gpa: ''
+                    gpa: '',
                   });
                   Alert.alert('Success', 'Education added');
                 } else {
@@ -873,14 +1126,23 @@ export default function ProfileScreen() {
 
     if (user?.profile?.education && user.profile.education.length > 0) {
       return (
-        <View style={styles.section}>
+        <View style={[
+            styles.section,
+            { backgroundColor: theme.background },
+            { borderColor: theme.borderColor },
+          ]}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIcon}>
-              <GraduationCap size={20} color="#000000" />
+              <GraduationCap size={20} color={theme.text} />
             </View>
-            <Text style={styles.sectionTitle}>Education</Text>
-            <TouchableOpacity style={styles.addButton} onPress={() => setIsAddingEducation(true)}>
-              <Plus size={16} color="#FFFFFF" />
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+              Education
+            </Text>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => setIsAddingEducation(true)}
+            >
+              <Plus size={16} color="#FFFF" />
             </TouchableOpacity>
           </View>
           <View style={styles.educationList}>
@@ -889,7 +1151,9 @@ export default function ProfileScreen() {
                 <View style={styles.itemHeader}>
                   <View style={styles.itemInfo}>
                     <Text style={styles.educationDegree}>{edu.degree}</Text>
-                    <Text style={styles.educationInstitution}>{edu.institution}</Text>
+                    <Text style={styles.educationInstitution}>
+                      {edu.institution}
+                    </Text>
                     <Text style={styles.educationDuration}>
                       {edu.startDate} - {edu.current ? 'Present' : edu.endDate}
                     </Text>
@@ -922,23 +1186,33 @@ export default function ProfileScreen() {
   const renderSkills = () => {
     if (isAddingSkills) {
       return (
-        <View style={styles.section}>
+        <View style={[
+            styles.section,
+            { backgroundColor: theme.background },
+            { borderColor: theme.borderColor },
+          ]}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIcon}>
-              <Award size={20} color="#000000" />
+              <Award size={20} color={theme.text} />
             </View>
-            <Text style={styles.sectionTitle}>Skills</Text>
-            <TouchableOpacity onPress={() => {
-              setIsAddingSkills(false);
-              setSkillsDraft('');
-            }}>
-              <X size={20} color="#000000" />
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+              Skills
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                setIsAddingSkills(false);
+                setSkillsDraft('');
+              }}
+            >
+              <X size={20} color={theme.text} />
             </TouchableOpacity>
           </View>
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Add Skills (comma separated)</Text>
+            <Text style={[styles.inputLabel, { color: theme.text }]}>
+              Add Skills (comma separated)
+            </Text>
             <TextInput
-              style={styles.aboutInput}
+              style={[styles.aboutInput,{backgroundColor:theme.background},{color:theme.text},{borderColor:theme.borderColor}]}
               value={skillsDraft}
               onChangeText={setSkillsDraft}
               placeholder="e.g. JavaScript, React, Node.js, Python"
@@ -960,13 +1234,16 @@ export default function ProfileScreen() {
             <TouchableOpacity
               style={styles.saveBtn}
               onPress={async () => {
-                const skills = skillsDraft.split(',').map(s => s.trim()).filter(s => s);
+                const skills = skillsDraft
+                  .split(',')
+                  .map((s) => s.trim())
+                  .filter((s) => s);
                 if (skills.length === 0) {
                   Alert.alert('Error', 'Please enter at least one skill');
                   return;
                 }
-                const resp = await updateProfile({ 
-                  skills: [...(user?.profile?.skills || []), ...skills]
+                const resp = await updateProfile({
+                  skills: [...(user?.profile?.skills || []), ...skills],
                 });
                 if (resp.success) {
                   setIsAddingSkills(false);
@@ -987,13 +1264,22 @@ export default function ProfileScreen() {
 
     if (user?.profile?.skills && user.profile.skills.length > 0) {
       return (
-        <View style={styles.section}>
+        <View style={[
+            styles.section,
+            { backgroundColor: theme.background },
+            { borderColor: theme.borderColor },
+          ]}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIcon}>
-              <Award size={20} color="#000000" />
+              <Award size={20} color={theme.text} />
             </View>
-            <Text style={styles.sectionTitle}>Skills</Text>
-            <TouchableOpacity style={styles.addButton} onPress={() => setIsAddingSkills(true)}>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+              Skills
+            </Text>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => setIsAddingSkills(true)}
+            >
               <Plus size={16} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
@@ -1022,16 +1308,33 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.background }]}
+      showsVerticalScrollIndicator={false}
+    >
       {/* Header Section with Profile Strength */}
-      <View style={styles.headerSection}>
+      <View
+        style={[styles.headerSection, { backgroundColor: theme.background }]}
+      >
         {/* Avatar Section */}
         <View style={styles.avatarSection}>
-          <TouchableOpacity style={styles.avatarContainer} onPress={showImageOptions}>
+          <TouchableOpacity
+            style={styles.avatarContainer}
+            onPress={showImageOptions}
+          >
             {user?.profile?.avatar ? (
-              <Image source={{ uri: user.profile.avatar }} style={styles.avatar} />
+              <Image
+                source={{ uri: user.profile.avatar }}
+                style={[styles.avatar, { borderColor: theme.borderColor }]}
+              />
             ) : (
-              <View style={styles.avatarPlaceholder}>
+              <View
+                style={[
+                  styles.avatarPlaceholder,
+                  { borderColor: theme.borderColor },
+                  { backgroundColor: theme.background },
+                ]}
+              >
                 <User size={40} color="#CCCCCC" />
               </View>
             )}
@@ -1042,20 +1345,44 @@ export default function ProfileScreen() {
         </View>
 
         {/* Profile Strength Indicator */}
-        <View style={styles.profileStrengthContainer}>
+        <View
+          style={[
+            styles.profileStrengthContainer,
+            { backgroundColor: theme.background },
+          ]}
+        >
           <View style={styles.profileStrengthHeader}>
-            <Text style={styles.profileStrengthTitle}>Profile Strength</Text>
-            <Text style={styles.profileStrengthPercentage}>{profileStrength}%</Text>
+            <Text style={[styles.profileStrengthTitle, { color: theme.text }]}>
+              Profile Strength
+            </Text>
+            <Text
+              style={[styles.profileStrengthPercentage, { color: theme.text }]}
+            >
+              {profileStrength}%
+            </Text>
           </View>
-          
+
           {/* Progress Bar */}
           <View style={styles.progressBarContainer}>
-            <View style={styles.progressBarBackground}>
-              <View 
+            <View
+              style={[
+                styles.progressBarBackground,
+                { backgroundColor: theme.borderColor },
+              ]}
+            >
+              <View
                 style={[
-                  styles.progressBarFill, 
-                  { width: `${profileStrength}%` }
-                ]} 
+                  styles.progressBarFill,
+                  {
+                    backgroundColor:
+                      profileStrength >= 80
+                        ? '#16A34A'
+                        : profileStrength >= 50
+                        ? '#EAB308'
+                        : '#DC2626',
+                  },
+                  { width: `${profileStrength}%` },
+                ]}
               />
             </View>
           </View>
@@ -1193,7 +1520,11 @@ export default function ProfileScreen() {
       </View>
 
       {/* Resume Preview Modal */}
-      <ResumeModal setShowResume={setShowResume} showResume={showResume} user={user} />
+      <ResumeModal
+        setShowResume={setShowResume}
+        showResume={showResume}
+        user={user}
+      />
     </ScrollView>
   );
 }
@@ -1301,7 +1632,7 @@ const styles = StyleSheet.create({
 
   // Section Styles
   section: {
-    backgroundColor: '#FFFFFF',
+    // backgroundColor: '#FFFFFF',
     marginHorizontal: 20,
     marginTop: 16,
     borderRadius: 12,
@@ -1318,7 +1649,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F8FAFC',
+    // backgroundColor: '#F8FAFC',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
